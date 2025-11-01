@@ -67,3 +67,11 @@ UserSchema.pre('save', function(next) {
 });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);
+
+
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bGVuaWVudC1sb2N1c3QtODQuY2xlcmsuYWNjb3VudHMuZGV2JA
+CLERK_SECRET_KEY=sk_test_CfctJy4eW0ALcFd8Zjg4u3riOaEiVsfj3aP1xTOlPL
+MONGODB_URI=mongodb+srv://vercel-admin-user-68820b55978bec55145dcb11:CGt8zEyTsT1ny5is@cluster0.xe5w4tt.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+RESEND_API_KEY=re_8J2r3Jgz_P3xJUWgHqHJSsGzCx1zmUCdD
+NM_EMAIL_USER=af912923@gmail.com
+NM_EMAIL_PW=jembijnnztiomkmz
