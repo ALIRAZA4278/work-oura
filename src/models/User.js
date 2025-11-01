@@ -45,6 +45,12 @@ const UserSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Job',
   }],
+  settings: {
+    emailNotifications: { type: Boolean, default: true },
+    jobAlerts: { type: Boolean, default: true },
+    profileVisibility: { type: Boolean, default: false },
+    twoFactorAuth: { type: Boolean, default: false }
+  },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -143,7 +143,7 @@ export default function JobDetailPage() {
 
   const handleApplySubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error("Please fill in all required fields");
       return;
@@ -151,62 +151,86 @@ export default function JobDetailPage() {
 
     setApplying(true);
     try {
-      const companyEmail = job?.contactEmail || job?.companyEmail || job?.company?.email || job?.recruiterEmail || "";
-      
-      if (!companyEmail) {
-        toast.error("No company email found for this job.");
+      // First, save the application to the database
+      const applicationData = {
+        jobId: job._id,
+        coverLetter: formData.coverLetter,
+        resume: formData.resume?.name || "resume.pdf",
+        customFields: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          skills: formData.skills,
+          bio: formData.bio,
+          education: formData.education
+        }
+      };
+
+      const applicationRes = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(applicationData),
+      });
+
+      if (!applicationRes.ok) {
+        const errorData = await applicationRes.json();
+        toast.error(errorData.error || "Failed to submit application");
         setApplying(false);
         return;
       }
 
-      const messageHtml = `
-        <h2>New Job Application</h2>
-        <p><strong>Job Title:</strong> ${job?.jobTitle}</p>
-        <p><strong>Job ID:</strong> ${job?._id}</p>
-        <p><strong>Applicant Name:</strong> ${formData.name}</p>
-        <p><strong>Applicant Email:</strong> ${formData.email}</p>
-        <p><strong>Clerk User ID:</strong> ${user?.id || ""}</p>
-        <p><strong>Phone:</strong> ${formData.phone}</p>
-        <p><strong>Skills:</strong> ${formData.skills}</p>
-        <p><strong>Bio:</strong> ${formData.bio}</p>
-        <p><strong>Education:</strong> ${formData.education}</p>
-        <p><strong>Cover Letter:</strong><br/>${formData.coverLetter}</p>
-      `;
+      const savedApplication = await applicationRes.json();
 
-      const res = await fetch("/api/apply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: `New Application for ${job?.jobTitle}`,
-          from_name: formData.name,
-          from_email: formData.email,
-          to: companyEmail,
-          message: messageHtml,
-        }),
-      });
+      // Then, send the email notification
+      const companyEmail = job?.contactEmail || job?.companyEmail || job?.company?.email || job?.recruiterEmail || "";
 
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Application sent successfully!");
-        setShowApplyModal(false);
-        setSubmittedData(formData);
-        setShowConfirmation(true);
-        // Reset form
-        setFormData({
-          name: user?.fullName || "",
-          email: user?.primaryEmailAddress?.emailAddress || "",
-          phone: "",
-          skills: "",
-          bio: "",
-          education: "",
-          coverLetter: "",
-          resume: null
+      if (companyEmail) {
+        const messageHtml = `
+          <h2>New Job Application</h2>
+          <p><strong>Job Title:</strong> ${job?.jobTitle}</p>
+          <p><strong>Job ID:</strong> ${job?._id}</p>
+          <p><strong>Applicant Name:</strong> ${formData.name}</p>
+          <p><strong>Applicant Email:</strong> ${formData.email}</p>
+          <p><strong>Clerk User ID:</strong> ${user?.id || ""}</p>
+          <p><strong>Phone:</strong> ${formData.phone}</p>
+          <p><strong>Skills:</strong> ${formData.skills}</p>
+          <p><strong>Bio:</strong> ${formData.bio}</p>
+          <p><strong>Education:</strong> ${formData.education}</p>
+          <p><strong>Cover Letter:</strong><br/>${formData.coverLetter}</p>
+        `;
+
+        await fetch("/api/apply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subject: `New Application for ${job?.jobTitle}`,
+            from_name: formData.name,
+            from_email: formData.email,
+            to: companyEmail,
+            message: messageHtml,
+          }),
         });
-      } else {
-        toast.error(data.error || "Failed to send application");
       }
+
+      toast.success("Application submitted successfully!");
+      setShowApplyModal(false);
+      setSubmittedData(formData);
+      setShowConfirmation(true);
+
+      // Reset form
+      setFormData({
+        name: user?.fullName || "",
+        email: user?.primaryEmailAddress?.emailAddress || "",
+        phone: "",
+        skills: "",
+        bio: "",
+        education: "",
+        coverLetter: "",
+        resume: null
+      });
     } catch (error) {
-      toast.error("Failed to send application");
+      console.error("Application submission error:", error);
+      toast.error("Failed to submit application");
     } finally {
       setApplying(false);
     }

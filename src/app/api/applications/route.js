@@ -52,7 +52,7 @@ export async function GET(request) {
     }
 
     const applications = await Application.find(query)
-      .populate("job", "title company location type")
+      .populate("job", "jobTitle companyName location jobType")
       .populate("applicant", "name email profile")
       .sort({ appliedAt: -1 });
 
@@ -104,12 +104,25 @@ export async function POST(request) {
       );
     }
 
+    // Get job details to store with application
+    const jobDetails = await Job.findById(body.jobId);
+
     const application = new Application({
       job: body.jobId,
       applicant: user._id,
       coverLetter: body.coverLetter,
       resume: body.resume,
       customFields: body.customFields,
+      // Store application details for easy access
+      name: body.customFields?.name || user.name,
+      email: body.customFields?.email || user.email,
+      phone: body.customFields?.phone,
+      skills: body.customFields?.skills,
+      bio: body.customFields?.bio,
+      education: body.customFields?.education,
+      jobTitle: jobDetails?.jobTitle,
+      companyName: jobDetails?.companyName,
+      location: jobDetails?.location,
     });
 
     await application.save();
@@ -120,7 +133,7 @@ export async function POST(request) {
     });
 
     const populatedApplication = await Application.findById(application._id)
-      .populate("job", "title company location type")
+      .populate("job", "jobTitle companyName location jobType")
       .populate("applicant", "name email profile");
 
 

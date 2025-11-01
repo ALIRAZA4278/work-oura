@@ -59,6 +59,18 @@ export default function DashboardPage() {
     profileVisibility: false,
     twoFactorAuth: false
   });
+  const [profileData, setProfileData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    role: "job_seeker",
+    bio: "",
+    location: "",
+    phone: ""
+  });
+  const [saving, setSaving] = useState(false);
+  const [applicationFilter, setApplicationFilter] = useState("all");
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -79,6 +91,20 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         setUserProfile(data);
+        // Load profile data into form
+        setProfileData({
+          firstName: user?.firstName || "",
+          lastName: user?.lastName || "",
+          email: user?.primaryEmailAddress?.emailAddress || "",
+          role: data.role || "job_seeker",
+          bio: data.profile?.bio || "",
+          location: data.profile?.location || "",
+          phone: data.profile?.phone || ""
+        });
+        // Load settings
+        if (data.settings) {
+          setSettings(data.settings);
+        }
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -141,22 +167,85 @@ export default function DashboardPage() {
     }
   };
 
-  const toggleSetting = (settingKey) => {
-    setSettings(prev => ({
-      ...prev,
-      [settingKey]: !prev[settingKey]
-    }));
-    
-    // Show toast notification
-    const settingNames = {
-      emailNotifications: "Email Notifications",
-      jobAlerts: "Job Alerts", 
-      profileVisibility: "Profile Visibility",
-      twoFactorAuth: "Two-Factor Authentication"
+  const toggleSetting = async (settingKey) => {
+    const newSettings = {
+      ...settings,
+      [settingKey]: !settings[settingKey]
     };
-    
-    const newValue = !settings[settingKey];
-    toast.success(`${settingNames[settingKey]} ${newValue ? 'enabled' : 'disabled'}`);
+    setSettings(newSettings);
+
+    // Save to database
+    try {
+      const response = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: newSettings })
+      });
+
+      if (response.ok) {
+        const settingNames = {
+          emailNotifications: "Email Notifications",
+          jobAlerts: "Job Alerts",
+          profileVisibility: "Profile Visibility",
+          twoFactorAuth: "Two-Factor Authentication"
+        };
+        toast.success(`${settingNames[settingKey]} ${newSettings[settingKey] ? 'enabled' : 'disabled'}`);
+      } else {
+        toast.error("Failed to update setting");
+        // Revert on error
+        setSettings(settings);
+      }
+    } catch (error) {
+      console.error("Error updating setting:", error);
+      toast.error("Failed to update setting");
+      setSettings(settings);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: profileData.role,
+          profile: {
+            bio: profileData.bio,
+            location: profileData.location,
+            phone: profileData.phone
+          }
+        })
+      });
+
+      if (response.ok) {
+        toast.success("Profile updated successfully!");
+        fetchUserProfile();
+      } else {
+        toast.error("Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelProfile = () => {
+    // Reset to original values
+    if (userProfile) {
+      setProfileData({
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
+        email: user?.primaryEmailAddress?.emailAddress || "",
+        role: userProfile.role || "job_seeker",
+        bio: userProfile.profile?.bio || "",
+        location: userProfile.profile?.location || "",
+        phone: userProfile.profile?.phone || ""
+      });
+    }
+    toast.info("Changes cancelled");
   };
 
   const getStatusColor = (status) => {
@@ -397,40 +486,36 @@ export default function DashboardPage() {
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { 
-                    label: "Total Applications", 
-                    value: applications.length, 
-                    icon: FileText, 
+                  {
+                    label: "Total Applications",
+                    value: applications.length,
+                    icon: FileText,
                     gradient: "from-blue-500 to-blue-600",
-                    change: "+12%",
-                    trend: "up"
+                    subtitle: `${applications.filter(app => app.status === 'pending').length} pending`
                   },
-                  { 
-                    label: "In Review", 
-                    value: applications.filter(app => app.status === 'reviewing').length, 
-                    icon: Eye, 
+                  {
+                    label: "In Review",
+                    value: applications.filter(app => app.status === 'reviewing').length,
+                    icon: Eye,
                     gradient: "from-emerald-500 to-emerald-600",
-                    change: "+8%",
-                    trend: "up"
+                    subtitle: "Being evaluated"
                   },
-                  { 
-                    label: "Interviews", 
-                    value: applications.filter(app => app.status === 'interview').length, 
-                    icon: Users, 
+                  {
+                    label: "Interviews",
+                    value: applications.filter(app => app.status === 'interview').length,
+                    icon: Users,
                     gradient: "from-purple-500 to-purple-600",
-                    change: "+24%",
-                    trend: "up"
+                    subtitle: "Scheduled & completed"
                   },
-                  { 
-                    label: "My Jobs", 
-                    value: jobs.length, 
-                    icon: Briefcase, 
+                  {
+                    label: "My Jobs",
+                    value: jobs.length,
+                    icon: Briefcase,
                     gradient: "from-orange-500 to-orange-600",
-                    change: "+5%",
-                    trend: "up"
+                    subtitle: `${jobs.reduce((sum, job) => sum + (job.applications?.length || 0), 0)} total applicants`
                   }
                 ].map((stat, index) => (
-                  <motion.div 
+                  <motion.div
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -443,8 +528,7 @@ export default function DashboardPage() {
                           <p className="text-sm font-medium text-black mb-1">{stat.label}</p>
                           <p className="text-3xl font-bold text-black mb-2">{stat.value}</p>
                           <div className="flex items-center">
-                            <span className="text-sm text-emerald-600 font-medium">{stat.change}</span>
-                            <span className="text-xs text-black ml-1">vs last month</span>
+                            <span className="text-xs text-gray-600">{stat.subtitle}</span>
                           </div>
                         </div>
                         <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.gradient} shadow-lg`}>
@@ -518,20 +602,60 @@ export default function DashboardPage() {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-black">My Applications</h2>
-              <div className="flex items-center space-x-3">
-                <motion.button 
+              <div className="flex items-center space-x-3 relative">
+                <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowFilterMenu(!showFilterMenu)}
                   className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200"
                 >
                   <Filter className="h-4 w-4 mr-2 text-black" />
                   <span className="text-black">Filter</span>
                 </motion.button>
+
+                {/* Filter Dropdown */}
+                <AnimatePresence>
+                  {showFilterMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 top-12 bg-white border border-gray-200 rounded-xl shadow-lg p-2 z-10 min-w-[180px]"
+                    >
+                      {[
+                        { label: "All Applications", value: "all" },
+                        { label: "Pending", value: "pending" },
+                        { label: "Reviewing", value: "reviewing" },
+                        { label: "Interview", value: "interview" },
+                        { label: "Hired", value: "hired" },
+                        { label: "Rejected", value: "rejected" }
+                      ].map((filter) => (
+                        <button
+                          key={filter.value}
+                          onClick={() => {
+                            setApplicationFilter(filter.value);
+                            setShowFilterMenu(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                            applicationFilter === filter.value ? "bg-blue-50 text-blue-600 font-medium" : "text-black"
+                          }`}
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
             <div className="grid gap-6">
-              {applications.length === 0 ? (
+              {(() => {
+                const filteredApplications = applicationFilter === "all"
+                  ? applications
+                  : applications.filter(app => app.status === applicationFilter);
+
+                return filteredApplications.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -551,7 +675,7 @@ export default function DashboardPage() {
                   </motion.button>
                 </motion.div>
               ) : (
-                applications.map((application, index) => (
+                filteredApplications.map((application, index) => (
                   <motion.div 
                     key={application._id}
                     initial={{ opacity: 0, y: 20 }}
@@ -597,7 +721,8 @@ export default function DashboardPage() {
                     </div>
                   </motion.div>
                 ))
-              )}
+              );
+              })()}
             </div>
           </motion.div>
         )}
@@ -748,17 +873,23 @@ export default function DashboardPage() {
                         <label className="block text-sm font-medium text-black mb-2">First Name</label>
                         <input
                           type="text"
-                          defaultValue={user.firstName}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all  placeholder-gray-500"
+                          value={user?.firstName || ""}
+                          disabled
+                          className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-black placeholder-gray-500 cursor-not-allowed"
+                          title="Managed by Clerk - cannot be changed here"
                         />
+                        <p className="text-xs text-gray-500 mt-1">Managed by your account settings</p>
                       </div>
                       <div className="text-black">
                         <label className="block text-sm font-medium text-black mb-2">Last Name</label>
                         <input
                           type="text"
-                          defaultValue={user.lastName}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black placeholder-gray-500"
+                          value={user?.lastName || ""}
+                          disabled
+                          className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-black placeholder-gray-500 cursor-not-allowed"
+                          title="Managed by Clerk - cannot be changed here"
                         />
+                        <p className="text-xs text-gray-500 mt-1">Managed by your account settings</p>
                       </div>
                     </div>
 
@@ -766,14 +897,21 @@ export default function DashboardPage() {
                       <label className="block text-sm font-medium text-black mb-2">Email Address</label>
                       <input
                         type="email"
-                        defaultValue={user.primaryEmailAddress?.emailAddress}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black placeholder-gray-500"
+                        value={user?.primaryEmailAddress?.emailAddress || ""}
+                        disabled
+                        className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-black placeholder-gray-500 cursor-not-allowed"
+                        title="Managed by Clerk - cannot be changed here"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Managed by your account settings</p>
                     </div>
 
                     <div className="text-black">
                       <label className="block text-sm font-medium text-black mb-2">Role</label>
-                      <select className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black">
+                      <select
+                        value={profileData.role}
+                        onChange={(e) => setProfileData({ ...profileData, role: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black"
+                      >
                         <option value="job_seeker">Job Seeker</option>
                         <option value="recruiter">Recruiter</option>
                         <option value="admin">Admin</option>
@@ -784,6 +922,8 @@ export default function DashboardPage() {
                       <label className="block text-sm font-medium text-black mb-2">Professional Bio</label>
                       <textarea
                         rows={4}
+                        value={profileData.bio}
+                        onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
                         placeholder="Tell us about your professional background, skills, and career goals..."
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none text-black placeholder-gray-500"
                       ></textarea>
@@ -794,6 +934,8 @@ export default function DashboardPage() {
                         <label className="block text-sm font-medium text-black mb-2">Location</label>
                         <input
                           type="text"
+                          value={profileData.location}
+                          onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
                           placeholder="City, Country"
                           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black placeholder-gray-500"
                         />
@@ -802,6 +944,8 @@ export default function DashboardPage() {
                         <label className="block text-sm font-medium text-black mb-2">Phone Number</label>
                         <input
                           type="tel"
+                          value={profileData.phone}
+                          onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                           placeholder="+1 (555) 123-4567"
                           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black placeholder-gray-500"
                         />
@@ -809,17 +953,32 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="flex items-center space-x-4 pt-4">
-                      <motion.button 
+                      <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium"
+                        onClick={handleSaveProfile}
+                        disabled={saving}
+                        className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                       >
-                        Save Changes
+                        {saving ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                            />
+                            Saving...
+                          </>
+                        ) : (
+                          "Save Changes"
+                        )}
                       </motion.button>
-                      <motion.button 
+                      <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="px-6 py-3 bg-gray-100 text-black rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"
+                        onClick={handleCancelProfile}
+                        disabled={saving}
+                        className="px-6 py-3 bg-gray-100 text-black rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium disabled:opacity-50"
                       >
                         Cancel
                       </motion.button>
@@ -839,16 +998,9 @@ export default function DashboardPage() {
                   </div>
                   <h3 className="text-lg font-semibold text-black">{user.fullName}</h3>
                   <p className="text-black text-sm mb-4">{user.primaryEmailAddress?.emailAddress}</p>
-                  <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                  >
-                    <span className="text-black">
-
-                    Change Photo
-                    </span>
-                  </motion.button>
+                  <p className="text-xs text-gray-500">
+                    Profile photo is managed through your Clerk account settings
+                  </p>
                 </div>
 
                 {/* Account Stats */}
@@ -856,10 +1008,32 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-semibold text-black mb-4">Account Stats</h3>
                   <div className="space-y-4">
                     {[
-                      { label: "Profile Views", value: "1,234", icon: Eye, color: "text-blue-600" },
-                      { label: "Applications", value: applications.length, icon: FileText, color: "text-emerald-600" },
-                      { label: "Jobs Posted", value: jobs.length, icon: Briefcase, color: "text-purple-600" },
-                      { label: "Success Rate", value: "78%", icon: Target, color: "text-orange-600" }
+                      {
+                        label: "Applications",
+                        value: applications.length,
+                        icon: FileText,
+                        color: "text-emerald-600"
+                      },
+                      {
+                        label: "Jobs Posted",
+                        value: jobs.length,
+                        icon: Briefcase,
+                        color: "text-purple-600"
+                      },
+                      {
+                        label: "Hired",
+                        value: applications.filter(app => app.status === 'hired').length,
+                        icon: CheckCircle,
+                        color: "text-green-600"
+                      },
+                      {
+                        label: "Success Rate",
+                        value: applications.length > 0
+                          ? `${Math.round((applications.filter(app => app.status === 'hired').length / applications.length) * 100)}%`
+                          : "0%",
+                        icon: Target,
+                        color: "text-orange-600"
+                      }
                     ].map((stat, index) => (
                       <div key={index} className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
