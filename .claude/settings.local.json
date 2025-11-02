@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "mcp__ide__getDiagnostics",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(del middleware.js)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

@@ -172,9 +172,20 @@ export async function POST(request) {
   try {
     await dbConnect();
     const body = await request.json();
+
+    console.log('[POST /api/jobs] Received request with recruiter Clerk ID:', body.recruiter);
+
     // Find the user by Clerk ID (from recruiter field)
     let user = await User.findOne({ clerkId: body.recruiter });
+
+    console.log('[POST /api/jobs] Found existing user:', user ? {
+      _id: user._id,
+      clerkId: user.clerkId,
+      email: user.email
+    } : null);
+
     if (!user) {
+      console.log('[POST /api/jobs] Creating new user with clerkId:', body.recruiter);
       // Create a new user with minimal info if not found
       user = await User.create({
         clerkId: body.recruiter,
@@ -182,7 +193,12 @@ export async function POST(request) {
         name: body.companyName || 'Recruiter',
         role: 'recruiter',
       });
+      console.log('[POST /api/jobs] New user created:', {
+        _id: user._id,
+        clerkId: user.clerkId
+      });
     }
+
     const job = await Job.create({
       userId: body.userId || '',
       jobTitle: body.jobTitle,
@@ -200,13 +216,22 @@ export async function POST(request) {
       isTestRequired: !!body.isTestRequired,
       openings: body.openings,
       contactEmail: body.contactEmail,
-      recruiter: user._id,
+      recruiter: user._id,  // Set to MongoDB _id of the user
     });
+
+    console.log('[POST /api/jobs] Job created successfully:', {
+      _id: job._id,
+      jobTitle: job.jobTitle,
+      recruiter: job.recruiter,
+      recruiterMongoId: user._id
+    });
+
     return new Response(JSON.stringify({ message: 'Job created', data: job }), {
       status: 201,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    console.error('[POST /api/jobs] Error creating job:', error);
     return new Response(JSON.stringify({ error: 'Failed to create job', details: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

@@ -80,28 +80,29 @@ export default function JobFilters({ onFilterChange }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6 mb-8"
+      className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-black flex items-center gap-2">
-          <Search className="w-6 h-6 text-blue-600" />
-          Find Your Dream Job
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-bold text-black flex items-center gap-2">
+          <Search className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+          <span className="hidden sm:inline">Find Your Dream Job</span>
+          <span className="inline sm:hidden">Search Jobs</span>
         </h2>
-        <div className="text-sm text-black">
-          {activeFiltersCount > 0 && `${activeFiltersCount} filters active`}
+        <div className="text-xs sm:text-sm text-black">
+          {activeFiltersCount > 0 && `${activeFiltersCount} active`}
         </div>
       </div>
 
       {/* Main Search Bar */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {/* Search Input */}
         <div className="lg:col-span-6 relative text-black">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
+          <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-black" />
           <input
             type="text"
-            placeholder="Search jobs, companies, or keywords..."
-            className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white/70 backdrop-blur-sm transition-all duration-200 shadow-sm hover:shadow-md"
+            placeholder="Search jobs..."
+            className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-black bg-white/70 backdrop-blur-sm transition-all duration-200 shadow-sm hover:shadow-md"
             value={filters.search}
             onChange={(e) => handleFilterChange("search", e.target.value)}
           />
@@ -109,11 +110,11 @@ export default function JobFilters({ onFilterChange }) {
 
         {/* Location Input */}
         <div className="lg:col-span-4 relative text-black">
-          <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 " />
+          <MapPin className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5" />
           <input
             type="text"
-            placeholder="City, state, or remote"
-            className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white/70 backdrop-blur-sm transition-all duration-200 shadow-sm hover:shadow-md"
+            placeholder="Location"
+            className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-white/70 backdrop-blur-sm transition-all duration-200 shadow-sm hover:shadow-md"
             value={filters.location}
             onChange={(e) => handleFilterChange("location", e.target.value)}
           />
@@ -125,26 +126,26 @@ export default function JobFilters({ onFilterChange }) {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowFilters(!showFilters)}
-            className={`w-full flex items-center justify-center px-6 py-4 rounded-xl font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
+            className={`w-full flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 shadow-sm hover:shadow-md ${
               showFilters || activeFiltersCount > 0
                 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <Filter className="h-5 w-5 mr-2" />
-            Filters
+            <Filter className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Filters</span>
             {activeFiltersCount > 0 && (
-              <span className="ml-2 bg-white text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+              <span className="ml-1 sm:ml-2 bg-white text-blue-600 rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold">
                 {activeFiltersCount}
               </span>
             )}
-            <ChevronDown className={`h-4 w-4 ml-2 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
           </motion.button>
         </div>
       </div>
 
       {/* Quick Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
         {quickFilters.map((filter) => {
           const Icon = filter.icon;
           return (
@@ -153,14 +154,14 @@ export default function JobFilters({ onFilterChange }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleFilterChange(filter.key, !filters[filter.key])}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
                 filters[filter.key]
                   ? 'bg-blue-100 text-blue-700 border-2 border-blue-200'
                   : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
               }`}
             >
-              <Icon className="w-4 h-4" />
-              {filter.label}
+              <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="whitespace-nowrap">{filter.label}</span>
             </motion.button>
           );
         })}
@@ -174,9 +175,9 @@ export default function JobFilters({ onFilterChange }) {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="border-t border-gray-200 pt-6"
+            className="border-t border-gray-200 pt-4 sm:pt-6"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
               {/* Job Type */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
@@ -262,12 +263,12 @@ export default function JobFilters({ onFilterChange }) {
             </div>
 
             {/* Salary Range */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
                 <DollarSign className="w-4 h-4 text-green-600" />
                 Salary Range (per month)
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="relative">
                   <input
                     type="number"

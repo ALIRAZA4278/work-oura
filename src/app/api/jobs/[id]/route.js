@@ -107,8 +107,11 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { userId } = await auth();
-    
+
+    console.log('[DELETE /api/jobs/[id]] Request to delete job:', params.id, 'by user:', userId);
+
     if (!userId) {
+      console.log('[DELETE /api/jobs/[id]] Unauthorized - no userId');
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -116,18 +119,24 @@ export async function DELETE(request, { params }) {
     }
 
     await connectToDB();
-    
+
     const user = await User.findOne({ clerkId: userId });
+    console.log('[DELETE /api/jobs/[id]] User found:', user ? user._id : null);
+
     const job = await Job.findById(params.id);
 
     if (!job) {
+      console.log('[DELETE /api/jobs/[id]] Job not found');
       return NextResponse.json(
         { error: "Job not found" },
         { status: 404 }
       );
     }
 
+    console.log('[DELETE /api/jobs/[id]] Job owner:', job.recruiter, 'Current user:', user._id);
+
     if (job.recruiter.toString() !== user._id.toString()) {
+      console.log('[DELETE /api/jobs/[id]] Permission denied - not job owner');
       return NextResponse.json(
         { error: "You can only delete your own jobs" },
         { status: 403 }
@@ -136,9 +145,11 @@ export async function DELETE(request, { params }) {
 
     await Job.findByIdAndDelete(params.id);
 
+    console.log('[DELETE /api/jobs/[id]] Job deleted successfully:', params.id);
+
     return NextResponse.json({ message: "Job deleted successfully" });
   } catch (error) {
-    console.error("Error deleting job:", error);
+    console.error("[DELETE /api/jobs/[id]] Error deleting job:", error);
     return NextResponse.json(
       { error: "Failed to delete job" },
       { status: 500 }

@@ -48,21 +48,21 @@ export default function Navbar() {
           : 'bg-white shadow-md'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+        <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Logo */}
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Link href="/" className="flex items-center space-x-3 group">
+            <Link href="/" className="flex items-center space-x-2 sm:space-x-3 group">
               <div className="relative">
                 <Image
                   src="/Workoura Logo.png"
                   alt="Workoura"
                   width={140}
                   height={40}
-                  className="h-10 w-auto group-hover:scale-105 transition-transform duration-200"
+                  className="h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform duration-200"
                   priority
                 />
               </div>

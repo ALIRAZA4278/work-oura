@@ -34,20 +34,20 @@ export default function Footer() {
       <div className="relative">
         {/* Top Section */}
         <div className="border-b border-gray-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
               {/* Left Side - CTA */}
-              <div>
-                <h3 className="text-3xl lg:text-4xl font-bold mb-4">
+              <div className="text-center lg:text-left">
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">
                   Ready to find your
                   <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
                     dream job?
                   </span>
                 </h3>
-                <p className="text-gray-400 text-lg mb-6">
+                <p className="text-gray-400 text-base sm:text-lg mb-4 sm:mb-6">
                   Join thousands of professionals who have already found their perfect career match.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
                   <Link
                     href="/jobs"
                     className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
@@ -65,22 +65,22 @@ export default function Footer() {
               </div>
 
               {/* Right Side - Stats */}
-              <div className="grid grid-cols-2 gap-6">
-                <div className="text-center p-6 bg-gray-800/50 rounded-xl backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-blue-400 mb-2">10K+</div>
-                  <div className="text-gray-400">Active Jobs</div>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+                <div className="text-center p-4 sm:p-6 bg-gray-800/50 rounded-lg sm:rounded-xl backdrop-blur-sm">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-400 mb-1 sm:mb-2">10K+</div>
+                  <div className="text-gray-400 text-xs sm:text-base">Active Jobs</div>
                 </div>
-                <div className="text-center p-6 bg-gray-800/50 rounded-xl backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-purple-400 mb-2">5K+</div>
-                  <div className="text-gray-400">Companies</div>
+                <div className="text-center p-4 sm:p-6 bg-gray-800/50 rounded-lg sm:rounded-xl backdrop-blur-sm">
+                  <div className="text-2xl sm:text-3xl font-bold text-purple-400 mb-1 sm:mb-2">5K+</div>
+                  <div className="text-gray-400 text-xs sm:text-base">Companies</div>
                 </div>
-                <div className="text-center p-6 bg-gray-800/50 rounded-xl backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-indigo-400 mb-2">50K+</div>
-                  <div className="text-gray-400">Job Seekers</div>
+                <div className="text-center p-4 sm:p-6 bg-gray-800/50 rounded-lg sm:rounded-xl backdrop-blur-sm">
+                  <div className="text-2xl sm:text-3xl font-bold text-indigo-400 mb-1 sm:mb-2">50K+</div>
+                  <div className="text-gray-400 text-xs sm:text-base">Job Seekers</div>
                 </div>
-                <div className="text-center p-6 bg-gray-800/50 rounded-xl backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-blue-400 mb-2">95%</div>
-                  <div className="text-gray-400">Success Rate</div>
+                <div className="text-center p-4 sm:p-6 bg-gray-800/50 rounded-lg sm:rounded-xl backdrop-blur-sm">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-400 mb-1 sm:mb-2">95%</div>
+                  <div className="text-gray-400 text-xs sm:text-base">Success Rate</div>
                 </div>
               </div>
             </div>
@@ -88,7 +88,7 @@ export default function Footer() {
         </div>
 
         {/* Links Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Company Info */}
             <div className="lg:col-span-1">
@@ -254,30 +254,30 @@ export default function Footer() {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <div className="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0 gap-4">
               {/* Copyright */}
-              <div className="flex items-center space-x-2 text-gray-400">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1 sm:gap-2 text-gray-400 text-xs sm:text-sm">
                 <span>&copy; {currentYear} Workoura.</span>
-                <span>Made with</span>
-                <Heart className="w-4 h-4 text-red-500" />
-                <span>for job seekers worldwide.</span>
+                <span className="hidden sm:inline">Made with</span>
+                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
+                <span className="hidden sm:inline">for job seekers worldwide.</span>
               </div>
 
               {/* Trust Badges */}
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2 text-gray-400">
-                  <Shield className="w-4 h-4 text-green-400" />
-                  <span className="text-sm">SSL Secured</span>
+              <div className="flex items-center gap-4 sm:gap-6">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400">
+                  <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
+                  <span className="text-xs sm:text-sm">SSL Secured</span>
                 </div>
-                <div className="flex items-center space-x-2 text-gray-400">
-                  <Star className="w-4 h-4 text-yellow-400" />
-                  <span className="text-sm">Trusted by 1M+</span>
+                <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400">
+                  <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400" />
+                  <span className="text-xs sm:text-sm">Trusted by 1M+</span>
                 </div>
               </div>
 
               {/* Social Links */}
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <Link 
                   href="https://www.facebook.com/ali.farooq.1447342" 
                   className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-300 group"

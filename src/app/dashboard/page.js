@@ -80,8 +80,18 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user) {
+      console.log('[Dashboard Frontend] 🚀 Component mounted, loading data...');
+      console.log('[Dashboard Frontend] User info:', {
+        clerkId: user.id,
+        email: user.primaryEmailAddress?.emailAddress,
+        firstName: user.firstName,
+        lastName: user.lastName
+      });
+
       fetchUserProfile();
       fetchDashboardData();
+    } else {
+      console.log('[Dashboard Frontend] ⏳ Waiting for user to load...');
     }
   }, [user]);
 
@@ -114,24 +124,61 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
+
+      console.log('='.repeat(60));
+      console.log('[Dashboard Frontend] 🔄 Fetching dashboard data...');
+      console.log('[Dashboard Frontend] 👤 Current user:', {
+        id: user?.id,
+        email: user?.primaryEmailAddress?.emailAddress
+      });
+
       // Fetch applications for job seekers or jobs for recruiters
       const [applicationsRes, jobsRes] = await Promise.all([
         fetch("/api/applications"),
         fetch("/api/dashboard") // Use dashboard API that filters by user ID
       ]);
 
+      console.log('[Dashboard Frontend] 📡 API Responses:');
+      console.log('  - Applications API:', applicationsRes.status);
+      console.log('  - Dashboard API:', jobsRes.status);
+
       if (applicationsRes.ok) {
         const appData = await applicationsRes.json();
+        console.log('[Dashboard Frontend] 📄 Applications fetched:', appData.length);
         setApplications(appData);
+      } else {
+        console.log('[Dashboard Frontend] ⚠️ Applications API failed:', applicationsRes.statusText);
       }
 
       if (jobsRes.ok) {
         const jobData = await jobsRes.json();
+        console.log('[Dashboard Frontend] 💼 Jobs fetched:', jobData.length);
+
+        if (jobData.length > 0) {
+          console.log('[Dashboard Frontend] 📋 Jobs list:');
+          jobData.forEach((job, idx) => {
+            console.log(`  ${idx + 1}. ${job.jobTitle} at ${job.companyName}`);
+            console.log(`     ID: ${job._id}`);
+            console.log(`     Created: ${new Date(job.createdAt).toLocaleString()}`);
+          });
+        } else {
+          console.log('[Dashboard Frontend] ⚠️ No jobs found. If you just posted a job:');
+          console.log('  1. Check server logs for [POST /api/jobs] and [Dashboard API]');
+          console.log('  2. Verify your Clerk ID matches in both places');
+          console.log('  3. Check if User record was created in MongoDB');
+        }
+
         setJobs(jobData || []); // Dashboard API returns jobs directly, not wrapped in 'jobs' property
+      } else {
+        console.log('[Dashboard Frontend] ⚠️ Dashboard API failed:', jobsRes.statusText);
+        const errorData = await jobsRes.text();
+        console.log('[Dashboard Frontend] Error details:', errorData);
       }
+
+      console.log('='.repeat(60));
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      console.error("[Dashboard Frontend] ❌ Error fetching dashboard data:", error);
+      toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -148,16 +195,22 @@ export default function DashboardPage() {
   };
 
   const handleDeleteJob = async (jobId) => {
-    if (window.confirm("Are you sure you want to delete this job?")) {
+    if (window.confirm("Are you sure you want to delete this job? This action cannot be undone.")) {
       try {
         const response = await fetch(`/api/jobs/${jobId}`, {
           method: "DELETE",
         });
 
         if (response.ok) {
-          toast.success("Job deleted successfully");
-          setJobs(jobs.filter(job => job._id !== jobId));
+          console.log('Job deleted successfully:', jobId);
+
+          // Immediately remove from state
+          setJobs(prevJobs => prevJobs.filter(job => job._id !== jobId));
+
+          toast.success("✅ Job deleted successfully!");
         } else {
+          const errorText = await response.text();
+          console.error('Job delete failed:', errorText);
           toast.error("Failed to delete job");
         }
       } catch (error) {
@@ -288,8 +341,17 @@ export default function DashboardPage() {
       // Create
       e.preventDefault();
       const formData = new FormData(e.target);
-      const recruiterId = user?.id || "";
-      const userId = user?.id || "";
+
+      // Get Clerk user ID - this is crucial for linking jobs to the user
+      const clerkUserId = user?.id;
+
+      if (!clerkUserId) {
+        toast.error('User not authenticated. Please log in again.');
+        return;
+      }
+
+      console.log('Creating job with Clerk User ID:', clerkUserId);
+
       let requiredSkillsRaw = formData.get('requiredSkills');
       let requiredSkills = [];
       if (requiredSkillsRaw && typeof requiredSkillsRaw === 'string') {
@@ -299,11 +361,19 @@ export default function DashboardPage() {
       } else {
         requiredSkills = [];
       }
+
+      // Get and validate companyLogo
+      let companyLogo = formData.get('companyLogo') || '';
+      // If logo is empty or N/A, set to empty string
+      if (!companyLogo || companyLogo === 'N/A' || companyLogo.trim() === '') {
+        companyLogo = '';
+      }
+
       payload = {
-        userId,
+        userId: clerkUserId,
         jobTitle: formData.get('jobTitle'),
         companyName: formData.get('companyName'),
-        companyLogo: formData.get('companyLogo'),
+        companyLogo: companyLogo,
         jobDescription: formData.get('jobDescription'),
         jobType: formData.get('jobType'),
         experienceLevel: formData.get('experienceLevel'),
@@ -316,9 +386,12 @@ export default function DashboardPage() {
         isTestRequired: formData.get('isTestRequired') === 'on',
         openings: formData.get('openings'),
         contactEmail: formData.get('contactEmail'),
-        recruiter: recruiterId,
+        recruiter: clerkUserId,  // Send Clerk User ID as recruiter
         applyLink: formData.get('applyLink'),
       };
+
+      console.log('Job payload:', payload);
+
       try {
         const res = await fetch('/api/jobs', {
           method: 'POST',
@@ -326,10 +399,23 @@ export default function DashboardPage() {
           body: JSON.stringify(payload),
         });
         if (res.ok) {
-          toast.success('Job posted successfully');
+          const result = await res.json();
+          console.log('✅ Job created successfully:', result);
+          console.log('📋 Job data:', result.data);
+
+          toast.success('✅ Job posted successfully! Loading your jobs...');
           setShowJobModal(false);
           setEditJob(null);
-          fetchDashboardData();
+
+          // Wait a moment for database to process
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Refresh data from server to get updated list
+          console.log('🔄 Refreshing dashboard data after job creation...');
+          await fetchDashboardData();
+
+          // Switch to "My Jobs" tab to show the newly created job
+          setActiveTab('jobs');
         } else {
           const errorText = await res.text();
           console.error('Job post failed:', errorText);
@@ -354,10 +440,22 @@ export default function DashboardPage() {
           body: JSON.stringify(payload),
         });
         if (res.ok) {
-          toast.success('Job updated successfully');
+          const result = await res.json();
+          console.log('Job updated successfully:', result);
+
+          // Update the job in the jobs list
+          setJobs(prevJobs =>
+            prevJobs.map(job =>
+              job._id === data._id ? { ...job, ...payload } : job
+            )
+          );
+
+          toast.success('✅ Job updated successfully!');
           setShowJobModal(false);
           setEditJob(null);
-          fetchDashboardData();
+
+          // Refresh data from server
+          await fetchDashboardData();
         } else {
           const errorText = await res.text();
           console.error('Job update failed:', errorText);
@@ -389,56 +487,55 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
         {/* Welcome Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="mb-4 sm:mb-8"
         >
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-xl">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shrink-0">
+                  <span className="text-white font-bold text-lg sm:text-xl">
                     {user.firstName?.[0]}{user.lastName?.[0]}
                   </span>
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-black">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">
                     Welcome back, {user.firstName}! 👋
                   </h1>
-                  <p className="text-black text-lg mt-1">
+                  <p className="text-black text-sm sm:text-base lg:text-lg mt-0.5 sm:mt-1">
                     Ready to manage your career journey?
                   </p>
                 </div>
               </div>
-              <div className="hidden md:flex items-center space-x-3">
-                <motion.button 
+              <div className="w-full sm:w-auto flex items-center space-x-3">
+                <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-md"
+                  className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-md text-sm sm:text-base"
                   onClick={() => setShowJobModal(true)}
                 >
                   <Plus className="h-4 w-4" />
                   <span>Post Job</span>
                 </motion.button>
-                
               </div>
             </div>
           </div>
         </motion.div>
 
         {/* Modern Tabs */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-8"
+          className="mb-4 sm:mb-8"
         >
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2">
-            <div className="flex space-x-1">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-1.5 sm:p-2 overflow-x-auto">
+            <div className="flex space-x-1 min-w-max sm:min-w-0">
               {[
                 { id: "overview", label: "Overview", icon: TrendingUp },
                 { id: "applications", label: "Applications", icon: FileText },
@@ -451,21 +548,15 @@ export default function DashboardPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center px-4 py-1 rounded-xl font-medium transition-all duration-200 ${
+                  className={`flex items-center px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm lg:text-base font-medium transition-all duration-200 whitespace-nowrap ${
                     activeTab === tab.id
                       ? "bg-blue-600 !text-white shadow-md"
-                      : "text-white hover:bg-gray-100 hover:text-black"
+                      : "text-black hover:bg-gray-100"
                   }`}
                 >
-                  <tab.icon className="h-4 w-4 mr-2" />
-                  <span onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center px-6 py-3  font-medium transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? "bg-blue-600 !text-white "
-                      : "text-black hover:bg-gray-100 hover:text-black"
-                  }`}>
-                    {tab.label}
-                  </span>
+                  <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="inline sm:hidden">{tab.label.split(' ')[0]}</span>
                 </motion.button>
               ))}
             </div>
@@ -484,7 +575,7 @@ export default function DashboardPage() {
               className="space-y-8"
             >
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {[
                   {
                     label: "Total Applications",

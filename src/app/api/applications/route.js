@@ -8,8 +8,11 @@ import Job from "@/models/Job";
 export async function GET(request) {
   try {
     const { userId } = await auth();
-    
+
+    console.log('[Applications API] 🔍 Fetching applications for Clerk User ID:', userId);
+
     if (!userId) {
+      console.log('[Applications API] ❌ No userId found - unauthorized');
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -17,23 +20,38 @@ export async function GET(request) {
     }
 
     await connectToDB();
-    
+    console.log('[Applications API] ✅ Database connected');
+
     const user = await User.findOne({ clerkId: userId });
-    
+
+    console.log('[Applications API] 👤 User lookup result:', user ? {
+      _id: user._id.toString(),
+      clerkId: user.clerkId,
+      email: user.email,
+      role: user.role
+    } : 'NULL');
+
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      console.log('[Applications API] ⚠️ User not found, creating new user...');
+      // Create user if not found
+      const newUser = await User.create({
+        clerkId: userId,
+        email: '',
+        name: 'User',
+        role: 'job_seeker',
+      });
+      console.log('[Applications API] ✅ New user created:', newUser._id);
+      return NextResponse.json([]);
     }
 
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get("jobId");
 
     let query = {};
-    
+
     if (user.role === "job_seeker") {
       query.applicant = user._id;
+      console.log('[Applications API] 🔍 Querying applications for job seeker:', user._id);
     } else if (user.role === "recruiter") {
       // Get applications for recruiter's jobs
       if (jobId) {
@@ -48,19 +66,46 @@ export async function GET(request) {
       } else {
         const recruiterJobs = await Job.find({ recruiter: user._id });
         query.job = { $in: recruiterJobs.map(job => job._id) };
+        console.log('[Applications API] 🔍 Querying applications for recruiter jobs:', recruiterJobs.length);
       }
     }
 
     const applications = await Application.find(query)
-      .populate("job", "jobTitle companyName location jobType")
+      .populate("job", "jobTitle companyName location jobType companyLogo salaryMin salaryMax")
       .populate("applicant", "name email profile")
-      .sort({ appliedAt: -1 });
+      .sort({ appliedAt: -1 })
+      .lean();
 
-    return NextResponse.json(applications);
+    console.log('[Applications API] 📊 Applications found:', applications.length);
+
+    if (applications.length > 0) {
+      console.log('[Applications API] 📋 Sample applications:');
+      applications.slice(0, 3).forEach((app, idx) => {
+        console.log(`  ${idx + 1}. Job: ${app.job?.jobTitle || app.jobTitle || 'N/A'}`);
+        console.log(`     Company: ${app.job?.companyName || app.companyName || 'N/A'}`);
+        console.log(`     Status: ${app.status}`);
+        console.log(`     Applied: ${new Date(app.appliedAt).toLocaleDateString()}`);
+      });
+    }
+
+    // Ensure all applications have the required fields
+    const formattedApplications = applications.map(app => ({
+      ...app,
+      jobTitle: app.job?.jobTitle || app.jobTitle || 'Job Title Not Available',
+      companyName: app.job?.companyName || app.companyName || 'Company Name Not Available',
+      location: app.job?.location || app.location || 'Location Not Available',
+      jobType: app.job?.jobType || 'Full-time',
+      companyLogo: app.job?.companyLogo || '',
+      salaryMin: app.job?.salaryMin || 0,
+      salaryMax: app.job?.salaryMax || 0,
+    }));
+
+    return NextResponse.json(formattedApplications);
   } catch (error) {
-    console.error("Error fetching applications:", error);
+    console.error("[Applications API] ❌ Error fetching applications:", error);
+    console.error("[Applications API] Error stack:", error.stack);
     return NextResponse.json(
-      { error: "Failed to fetch applications" },
+      { error: "Failed to fetch applications", details: error.message },
       { status: 500 }
     );
   }
