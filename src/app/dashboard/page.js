@@ -767,47 +767,73 @@ export default function DashboardPage() {
                 </motion.div>
               ) : (
                 filteredApplications.map((application, index) => (
-                  <motion.div 
+                  <motion.div
                     key={application._id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-300"
+                    className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-all duration-300"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-start space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <Briefcase className="h-6 w-6 text-white" />
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0">
+                      <div className="flex-1 w-full sm:w-auto">
+                        <div className="flex items-start gap-3 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
+                            <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold text-black mb-1">{application.jobTitle}</h3>
-                            <p className="text-black mb-3">{application.companyName}</p>
-                            <div className="flex items-center space-x-4 text-sm text-black">
-                              <span className="flex items-center">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                {application.location}
+                            <h3 className="text-base sm:text-lg font-semibold text-black mb-1 line-clamp-2">{application.jobTitle || 'Job Title'}</h3>
+                            <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-3">{application.companyName || 'Company Name'}</p>
+
+                            {/* Job Type Badge */}
+                            {application.jobType && (
+                              <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium mb-2">
+                                {application.jobType}
                               </span>
-                              <span className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-1" />
-                                {new Date(application.createdAt).toLocaleDateString()}
+                            )}
+
+                            {/* Info Row */}
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                                <span className="truncate">{application.location || 'Location N/A'}</span>
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                                <span className="hidden sm:inline">Applied: </span>
+                                {new Date(application.appliedAt || application.createdAt).toLocaleDateString()}
                               </span>
                             </div>
+
+                            {/* Salary if available */}
+                            {application.salaryMin && application.salaryMax && (
+                              <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600 font-semibold mt-2">
+                                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                                {application.salaryMin.toLocaleString()} - {application.salaryMax.toLocaleString()} / month
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3 flex-shrink-0">
-                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white ${getStatusColor(application.status)}`}>
+
+                      <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start shrink-0">
+                        <div className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-white ${getStatusColor(application.status)}`}>
                           {getStatusIcon(application.status)}
                           <span className="ml-1 capitalize">{application.status}</span>
                         </div>
-                        <motion.button 
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <MoreVertical className="h-4 w-4 text-black" />
-                        </motion.button>
+
+                        {/* View Job Button */}
+                        {application.job && (
+                          <motion.a
+                            href={`/jobs/${typeof application.job === 'object' ? application.job._id : application.job}`}
+                            target="_blank"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium"
+                          >
+                            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">View Job</span>
+                          </motion.a>
+                        )}
                       </div>
                     </div>
                   </motion.div>
