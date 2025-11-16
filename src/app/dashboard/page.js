@@ -10,18 +10,19 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { 
-  User, 
-  Briefcase, 
-  FileText, 
+import {
+  User,
+  Briefcase,
+  FileText,
   Settings,
   Plus,
   Eye,
   Edit,
   Trash2,
   CheckCircle,
-  Clock,  
+  Clock,
   XCircle,
+  X,
   Search,
   Bell,
   Calendar,
@@ -71,6 +72,10 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [applicationFilter, setApplicationFilter] = useState("all");
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [selectedJobApplications, setSelectedJobApplications] = useState([]);
+  const [showApplicationsModal, setShowApplicationsModal] = useState(false);
+  const [selectedJobForApps, setSelectedJobForApps] = useState(null);
+  const [loadingApplications, setLoadingApplications] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -217,6 +222,69 @@ export default function DashboardPage() {
         console.error("Error deleting job:", error);
         toast.error("Failed to delete job");
       }
+    }
+  };
+
+  const handleViewApplications = async (job) => {
+    setSelectedJobForApps(job);
+    setShowApplicationsModal(true);
+    setLoadingApplications(true);
+
+    try {
+      console.log('[Dashboard] 📋 Fetching applications for job:', job._id);
+      const response = await fetch(`/api/applications?jobId=${job._id}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[Dashboard] ✅ Applications fetched:', data.length);
+        setSelectedJobApplications(data);
+      } else {
+        console.error('[Dashboard] ❌ Failed to fetch applications');
+        toast.error("Failed to load applications");
+        setSelectedJobApplications([]);
+      }
+    } catch (error) {
+      console.error("[Dashboard] ❌ Error fetching applications:", error);
+      toast.error("Failed to load applications");
+      setSelectedJobApplications([]);
+    } finally {
+      setLoadingApplications(false);
+    }
+  };
+
+  const handleUpdateApplicationStatus = async (applicationId, newStatus) => {
+    try {
+      const response = await fetch(`/api/applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        console.log('[Dashboard] ✅ Application status updated');
+        toast.success(`Status updated to ${newStatus}`);
+
+        // Update the modal applications list
+        setSelectedJobApplications(prev =>
+          prev.map(app =>
+            app._id === applicationId ? { ...app, status: newStatus } : app
+          )
+        );
+
+        // Also update the main applications list (for Applications tab)
+        setApplications(prev =>
+          prev.map(app =>
+            app._id === applicationId ? { ...app, status: newStatus } : app
+          )
+        );
+
+        console.log('[Dashboard] 📋 Status updated in both modal and main applications list');
+      } else {
+        toast.error("Failed to update status");
+      }
+    } catch (error) {
+      console.error("[Dashboard] ❌ Error updating status:", error);
+      toast.error("Failed to update status");
     }
   };
 
@@ -520,7 +588,7 @@ export default function DashboardPage() {
                   onClick={() => setShowJobModal(true)}
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Post Job</span>
+                  <span className="text-white">Post Job</span>
                 </motion.button>
               </div>
             </div>
@@ -756,14 +824,21 @@ export default function DashboardPage() {
                     <FileText className="h-8 w-8 text-black" />
                   </div>
                   <h3 className="text-lg font-semibold text-black mb-2">No applications yet</h3>
-                  <p className="text-black mb-6">Start applying to jobs to see them here!</p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
-                  >
-                    Browse Jobs
-                  </motion.button>
+                  <p className="text-black mb-6">
+                    {userProfile?.role === 'recruiter'
+                      ? 'Applications will appear here when candidates apply to your jobs'
+                      : 'Start applying to jobs to see them here!'}
+                  </p>
+                  {userProfile?.role !== 'recruiter' && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => router.push('/jobs')}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
+                    >
+                      Browse Jobs
+                    </motion.button>
+                  )}
                 </motion.div>
               ) : (
                 filteredApplications.map((application, index) => (
@@ -781,58 +856,123 @@ export default function DashboardPage() {
                             <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-base sm:text-lg font-semibold text-black mb-1 line-clamp-2">{application.jobTitle || 'Job Title'}</h3>
-                            <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-3">{application.companyName || 'Company Name'}</p>
+                            {/* Show different content based on user role */}
+                            {userProfile?.role === 'recruiter' ? (
+                              <>
+                                {/* For Recruiter: Show applicant name and which job they applied to */}
+                                <h3 className="text-base sm:text-lg font-semibold text-black mb-1 line-clamp-2">
+                                  {application.name || application.applicant?.name || 'Anonymous Applicant'}
+                                </h3>
+                                <p className="text-sm sm:text-base text-gray-600 mb-2">
+                                  Applied for: <span className="font-medium text-blue-600">{application.jobTitle || 'Job Title'}</span>
+                                </p>
 
-                            {/* Job Type Badge */}
-                            {application.jobType && (
-                              <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium mb-2">
-                                {application.jobType}
-                              </span>
-                            )}
+                                {/* Contact Info */}
+                                <div className="space-y-1 mb-2">
+                                  {(application.email || application.applicant?.email) && (
+                                    <p className="text-xs sm:text-sm text-gray-600 flex items-center gap-1">
+                                      <span className="font-medium">Email:</span> {application.email || application.applicant?.email}
+                                    </p>
+                                  )}
+                                  {application.phone && (
+                                    <p className="text-xs sm:text-sm text-gray-600 flex items-center gap-1">
+                                      <span className="font-medium">Phone:</span> {application.phone}
+                                    </p>
+                                  )}
+                                  {application.skills && (
+                                    <p className="text-xs sm:text-sm text-gray-700 flex items-center gap-1">
+                                      <span className="font-medium">Skills:</span> {application.skills}
+                                    </p>
+                                  )}
+                                </div>
 
-                            {/* Info Row */}
-                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-                                <span className="truncate">{application.location || 'Location N/A'}</span>
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-                                <span className="hidden sm:inline">Applied: </span>
-                                {new Date(application.appliedAt || application.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
+                                {/* Application Date */}
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <Calendar className="h-3 w-3" />
+                                  Applied {new Date(application.appliedAt || application.createdAt).toLocaleDateString()}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                {/* For Job Seeker: Show job title and company */}
+                                <h3 className="text-base sm:text-lg font-semibold text-black mb-1 line-clamp-2">{application.jobTitle || 'Job Title'}</h3>
+                                <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-3">{application.companyName || 'Company Name'}</p>
 
-                            {/* Salary if available */}
-                            {application.salaryMin && application.salaryMax && (
-                              <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600 font-semibold mt-2">
-                                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
-                                {application.salaryMin.toLocaleString()} - {application.salaryMax.toLocaleString()} / month
-                              </div>
+                                {/* Job Type Badge */}
+                                {application.jobType && (
+                                  <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium mb-2">
+                                    {application.jobType}
+                                  </span>
+                                )}
+
+                                {/* Info Row */}
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                                    <span className="truncate">{application.location || 'Location N/A'}</span>
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                                    <span className="hidden sm:inline">Applied: </span>
+                                    {new Date(application.appliedAt || application.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+
+                                {/* Salary if available */}
+                                {application.salaryMin && application.salaryMax && (
+                                  <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600 font-semibold mt-2">
+                                    <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    {application.salaryMin.toLocaleString()} - {application.salaryMax.toLocaleString()} / month
+                                  </div>
+                                )}
+                              </>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start shrink-0">
-                        <div className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-white ${getStatusColor(application.status)}`}>
-                          {getStatusIcon(application.status)}
-                          <span className="ml-1 capitalize">{application.status}</span>
-                        </div>
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        {/* For Recruiter: Show status dropdown */}
+                        {userProfile?.role === 'recruiter' ? (
+                          <div className="flex flex-col gap-2">
+                            <div className={`inline-flex items-center justify-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-white ${getStatusColor(application.status)}`}>
+                              {getStatusIcon(application.status)}
+                              <span className="ml-1 capitalize">{application.status}</span>
+                            </div>
+                            <select
+                              value={application.status}
+                              onChange={(e) => handleUpdateApplicationStatus(application._id, e.target.value)}
+                              className="px-2 py-1.5 bg-white border border-gray-300 rounded-lg text-xs sm:text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="reviewing">Reviewing</option>
+                              <option value="interview">Interview</option>
+                              <option value="hired">Hired</option>
+                              <option value="rejected">Rejected</option>
+                            </select>
+                          </div>
+                        ) : (
+                          <>
+                            {/* For Job Seeker: Show status badge only */}
+                            <div className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-white ${getStatusColor(application.status)}`}>
+                              {getStatusIcon(application.status)}
+                              <span className="ml-1 capitalize">{application.status}</span>
+                            </div>
 
-                        {/* View Job Button */}
-                        {application.job && (
-                          <motion.a
-                            href={`/jobs/${typeof application.job === 'object' ? application.job._id : application.job}`}
-                            target="_blank"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium"
-                          >
-                            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                            <span className="hidden sm:inline">View Job</span>
-                          </motion.a>
+                            {/* View Job Button */}
+                            {application.job && (
+                              <motion.a
+                                href={`/jobs/${typeof application.job === 'object' ? application.job._id : application.job}`}
+                                target="_blank"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium"
+                              >
+                                <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="hidden sm:inline">View Job</span>
+                              </motion.a>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -932,8 +1072,21 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2 flex-shrink-0">
-                        <motion.button 
+                      <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleViewApplications(job)}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors text-sm font-medium text-purple-700"
+                          title="View Applications"
+                        >
+                          <Users className="h-4 w-4" />
+                          <span className="hidden sm:inline">Apps</span>
+                          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-purple-600 rounded-full">
+                            {job.applications?.length || 0}
+                          </span>
+                        </motion.button>
+                        <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleViewJob(job._id)}
@@ -942,7 +1095,7 @@ export default function DashboardPage() {
                         >
                           <Eye className="h-4 w-4 text-blue-600" />
                         </motion.button>
-                        <motion.button 
+                        <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleEditJob(job._id)}
@@ -951,7 +1104,7 @@ export default function DashboardPage() {
                         >
                           <Edit className="h-4 w-4 text-black" />
                         </motion.button>
-                        <motion.button 
+                        <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleDeleteJob(job._id)}
@@ -1206,6 +1359,148 @@ export default function DashboardPage() {
           userId={user?.id || ''}
           editJob={editJob}
         />
+
+        {/* Applications Modal */}
+        <AnimatePresence>
+          {showApplicationsModal && (
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden"
+              >
+                {/* Header */}
+                <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 border-b border-purple-700/50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">Applications for {selectedJobForApps?.jobTitle}</h2>
+                      <p className="text-purple-100 text-sm mt-1">
+                        {selectedJobApplications.length} total applications
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowApplicationsModal(false)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <X className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                  {loadingApplications ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                      <p className="text-gray-600">Loading applications...</p>
+                    </div>
+                  ) : selectedJobApplications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Users className="h-16 w-16 text-gray-300 mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No applications yet</h3>
+                      <p className="text-gray-600">Applications will appear here when candidates apply</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {selectedJobApplications.map((application) => (
+                        <motion.div
+                          key={application._id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-200"
+                        >
+                          <div className="flex flex-col md:flex-row gap-4">
+                            {/* Applicant Info */}
+                            <div className="flex-1">
+                              <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0">
+                                  {application.name?.charAt(0).toUpperCase() || application.applicant?.name?.charAt(0).toUpperCase() || 'A'}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                    {application.name || application.applicant?.name || 'Anonymous'}
+                                  </h3>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    {application.email || application.applicant?.email || 'No email'}
+                                  </p>
+                                  {application.phone && (
+                                    <p className="text-sm text-gray-600 flex items-center gap-1 mb-2">
+                                      <span className="font-medium">Phone:</span> {application.phone}
+                                    </p>
+                                  )}
+                                  {application.skills && (
+                                    <p className="text-sm text-gray-700 mb-2">
+                                      <span className="font-medium">Skills:</span> {application.skills}
+                                    </p>
+                                  )}
+                                  {application.bio && (
+                                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                                      <span className="font-medium">Bio:</span> {application.bio}
+                                    </p>
+                                  )}
+                                  <div className="flex items-center gap-2 text-xs text-gray-500 mt-2">
+                                    <Calendar className="h-3 w-3" />
+                                    Applied {new Date(application.appliedAt || application.createdAt).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Cover Letter */}
+                              {application.coverLetter && (
+                                <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                                  <p className="text-sm font-medium text-gray-900 mb-2">Cover Letter:</p>
+                                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{application.coverLetter}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Status & Actions */}
+                            <div className="flex flex-col gap-3 md:w-48">
+                              <div className={`px-3 py-2 rounded-lg text-sm font-medium text-white text-center ${getStatusColor(application.status)}`}>
+                                {getStatusIcon(application.status)}
+                                <span className="ml-1 capitalize">{application.status}</span>
+                              </div>
+
+                              {/* Status Update Buttons */}
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-gray-700 mb-1">Update Status:</p>
+                                <select
+                                  value={application.status}
+                                  onChange={(e) => handleUpdateApplicationStatus(application._id, e.target.value)}
+                                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="reviewing">Reviewing</option>
+                                  <option value="interview">Interview</option>
+                                  <option value="hired">Hired</option>
+                                  <option value="rejected">Rejected</option>
+                                </select>
+                              </div>
+
+                              {/* Resume Link */}
+                              {application.resume && (
+                                <a
+                                  href={application.resume}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  View Resume
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
       <Footer />
     </div>
