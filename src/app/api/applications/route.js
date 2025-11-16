@@ -114,9 +114,10 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const { userId } = await auth();
-    console.log("Auth userId:", userId); // Debugging log
+    console.log("[Applications POST] 🔍 Auth userId:", userId);
 
     if (!userId) {
+      console.log("[Applications POST] ❌ No userId - unauthorized");
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -124,10 +125,38 @@ export async function POST(request) {
     }
 
     await connectToDB();
-    
-    const user = await User.findOne({ clerkId: userId });
-    
-    if (!user || user.role !== "job_seeker") {
+    console.log("[Applications POST] ✅ Database connected");
+
+    let user = await User.findOne({ clerkId: userId });
+    console.log("[Applications POST] 👤 User lookup result:", user ? {
+      _id: user._id.toString(),
+      clerkId: user.clerkId,
+      role: user.role
+    } : 'NULL');
+
+    // If user doesn't exist, create a new one with job_seeker role
+    if (!user) {
+      console.log("[Applications POST] ⚠️ User not found, creating new user as job_seeker...");
+      try {
+        user = await User.create({
+          clerkId: userId,
+          email: '',
+          name: 'User',
+          role: 'job_seeker',
+        });
+        console.log("[Applications POST] ✅ New user created:", user._id);
+      } catch (createError) {
+        console.error("[Applications POST] ❌ Failed to create user:", createError);
+        return NextResponse.json(
+          { error: "Failed to create user profile" },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Check if user role is job_seeker
+    if (user.role !== "job_seeker") {
+      console.log("[Applications POST] ⚠️ User is not a job seeker, role:", user.role);
       return NextResponse.json(
         { error: "Only job seekers can apply to jobs" },
         { status: 403 }
@@ -135,7 +164,13 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    
+    console.log("[Applications POST] 📦 Request body:", {
+      jobId: body.jobId,
+      hasCustomFields: !!body.customFields,
+      hasCoverLetter: !!body.coverLetter,
+      hasResume: !!body.resume
+    });
+
     // Check if user has already applied
     const existingApplication = await Application.findOne({
       job: body.jobId,
@@ -143,6 +178,7 @@ export async function POST(request) {
     });
 
     if (existingApplication) {
+      console.log("[Applications POST] ⚠️ User already applied to this job");
       return NextResponse.json(
         { error: "You have already applied to this job" },
         { status: 400 }
@@ -151,6 +187,18 @@ export async function POST(request) {
 
     // Get job details to store with application
     const jobDetails = await Job.findById(body.jobId);
+    console.log("[Applications POST] 💼 Job details:", jobDetails ? {
+      jobTitle: jobDetails.jobTitle,
+      companyName: jobDetails.companyName
+    } : 'NULL');
+
+    if (!jobDetails) {
+      console.log("[Applications POST] ❌ Job not found with ID:", body.jobId);
+      return NextResponse.json(
+        { error: "Job not found" },
+        { status: 404 }
+      );
+    }
 
     const application = new Application({
       job: body.jobId,
@@ -171,22 +219,25 @@ export async function POST(request) {
     });
 
     await application.save();
+    console.log("[Applications POST] ✅ Application saved with ID:", application._id);
 
     // Add application to job
     await Job.findByIdAndUpdate(body.jobId, {
       $push: { applications: application._id },
     });
+    console.log("[Applications POST] ✅ Application added to job");
 
     const populatedApplication = await Application.findById(application._id)
       .populate("job", "jobTitle companyName location jobType")
       .populate("applicant", "name email profile");
 
-
+    console.log("[Applications POST] 🎉 Application created successfully");
     return NextResponse.json(populatedApplication, { status: 201 });
   } catch (error) {
-    console.error("Error creating application:", error);
+    console.error("[Applications POST] ❌ Error creating application:", error);
+    console.error("[Applications POST] Error stack:", error.stack);
     return NextResponse.json(
-      { error: "Failed to create application" },
+      { error: "Failed to create application", details: error.message },
       { status: 500 }
     );
   }
