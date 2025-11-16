@@ -567,7 +567,7 @@ export default function JobDetailPage() {
                           type="text"
                           value={formData.name}
                           onChange={(e) => handleInputChange('name', e.target.value)}
-                          className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 ${
+                          className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-white/60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 ${
                             formErrors.name ? 'border-red-500' : 'border-slate-600'
                           }`}
                           placeholder="Enter your full name"
@@ -587,7 +587,7 @@ export default function JobDetailPage() {
                           type="email"
                           value={formData.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
-                          className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 ${
+                          className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-white/60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 ${
                             formErrors.email ? 'border-red-500' : 'border-slate-600'
                           }`}
                           placeholder="Enter your email address"
@@ -607,7 +607,7 @@ export default function JobDetailPage() {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => handleInputChange('phone', e.target.value)}
-                          className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 ${
+                          className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-white/60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 ${
                             formErrors.phone ? 'border-red-500' : 'border-slate-600'
                           }`}
                           placeholder="Enter your phone number"
@@ -627,7 +627,7 @@ export default function JobDetailPage() {
                           type="text"
                           value={formData.education}
                           onChange={(e) => handleInputChange('education', e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                          className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-white/60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
                           placeholder="Your highest education"
                         />
                       </div>
@@ -653,7 +653,7 @@ export default function JobDetailPage() {
                         type="text"
                         value={formData.skills}
                         onChange={(e) => handleInputChange('skills', e.target.value)}
-                        className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 ${
+                        className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-white/60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 ${
                           formErrors.skills ? 'border-red-500' : 'border-slate-600'
                         }`}
                         placeholder="e.g. React, Node.js, MongoDB, Python"
@@ -673,7 +673,7 @@ export default function JobDetailPage() {
                         type="file"
                         accept=".pdf,.doc,.docx"
                         onChange={handleFileChange}
-                        className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 ${
+                        className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-white/60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 ${
                           formErrors.resume ? 'border-red-500' : 'border-slate-600'
                         }`}
                       />
@@ -692,7 +692,7 @@ export default function JobDetailPage() {
                         value={formData.bio}
                         onChange={(e) => handleInputChange('bio', e.target.value)}
                         rows={3}
-                        className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 resize-none"
+                        className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-white/60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 resize-none"
                         placeholder="Short bio about yourself and your experience"
                       />
                     </div>
@@ -717,7 +717,7 @@ export default function JobDetailPage() {
                         value={formData.coverLetter}
                         onChange={(e) => handleInputChange('coverLetter', e.target.value)}
                         rows={6}
-                        className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 resize-none ${
+                        className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-white/60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 resize-none ${
                           formErrors.coverLetter ? 'border-red-500' : 'border-slate-600'
                         }`}
                         placeholder="Write your cover letter here. Explain why you're interested in this role and what makes you a good fit..."
