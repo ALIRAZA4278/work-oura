@@ -178,25 +178,60 @@ export async function POST(request) {
     // Find the user by Clerk ID (from recruiter field)
     let user = await User.findOne({ clerkId: body.recruiter });
 
-    console.log('[POST /api/jobs] Found existing user:', user ? {
+    console.log('[POST /api/jobs] Found existing user by clerkId:', user ? {
       _id: user._id,
       clerkId: user.clerkId,
       email: user.email
     } : null);
 
+    if (!user && body.contactEmail) {
+      // Try to find user by email if clerkId lookup failed
+      user = await User.findOne({ email: body.contactEmail });
+      console.log('[POST /api/jobs] Found existing user by email:', user ? {
+        _id: user._id,
+        clerkId: user.clerkId,
+        email: user.email
+      } : null);
+
+      // If user exists with this email but different clerkId, update the clerkId
+      if (user && user.clerkId !== body.recruiter) {
+        console.log('[POST /api/jobs] Updating user clerkId from', user.clerkId, 'to', body.recruiter);
+        user.clerkId = body.recruiter;
+        await user.save();
+      }
+    }
+
     if (!user) {
       console.log('[POST /api/jobs] Creating new user with clerkId:', body.recruiter);
       // Create a new user with minimal info if not found
-      user = await User.create({
-        clerkId: body.recruiter,
-        email: body.contactEmail || '',
-        name: body.companyName || 'Recruiter',
-        role: 'recruiter',
-      });
-      console.log('[POST /api/jobs] New user created:', {
-        _id: user._id,
-        clerkId: user.clerkId
-      });
+      // Use a timestamp-based email to avoid duplicates if contactEmail is missing or duplicate
+      const uniqueEmail = body.contactEmail || `user_${body.recruiter}@temp.local`;
+
+      try {
+        user = await User.create({
+          clerkId: body.recruiter,
+          email: uniqueEmail,
+          name: body.companyName || 'Recruiter',
+          role: 'recruiter',
+        });
+        console.log('[POST /api/jobs] New user created:', {
+          _id: user._id,
+          clerkId: user.clerkId
+        });
+      } catch (createError) {
+        // If still getting duplicate key error, try with a truly unique email
+        if (createError.code === 11000) {
+          console.log('[POST /api/jobs] Duplicate key on create, using timestamp email');
+          user = await User.create({
+            clerkId: body.recruiter,
+            email: `user_${body.recruiter}_${Date.now()}@temp.local`,
+            name: body.companyName || 'Recruiter',
+            role: 'recruiter',
+          });
+        } else {
+          throw createError;
+        }
+      }
     }
 
     const job = await Job.create({
