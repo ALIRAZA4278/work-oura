@@ -1,3 +1,18 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * Login session ka logic. Tables:
+ *   sessions      INSERT (login), SELECT (har request), UPDATE revoked_at (logout)
+ *   accounts      SELECT (current user), UPDATE last_login_at
+ *   profiles      SELECT (accounts ke saath join, FK account_id)
+ *   user_settings SELECT (accounts ke saath join, FK account_id)
+ *
+ * Flow: cookie "wk_session" (JWT) -> hashToken -> sessions.token_hash match
+ *       -> sessions.account_id -> accounts.id -> poora user object.
+ * serializeAccount() DB row ko frontend shape mein badalta hai:
+ *   accounts.full_name -> name, profiles.resume_url -> profile.resume,
+ *   user_settings.email_notifications -> settings.emailNotifications, waghera.
+ */
 import { cookies, headers } from 'next/headers';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { signToken, verifyToken, hashToken } from '@/lib/jwt';

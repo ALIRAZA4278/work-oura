@@ -1,3 +1,10 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * GET /api/dashboard  <- app/dashboard/page.js (My Jobs + stats)
+ *   jobs SELECT WHERE recruiter_id = logged-in accounts.id
+ *   applications ( count ) = har job ki applications ginta hai (FK job_id se)
+ */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentAccount } from '@/lib/auth';

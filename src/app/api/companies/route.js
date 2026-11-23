@@ -1,3 +1,10 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * GET /api/companies  <- app/companies/page.js
+ *   companies SELECT (sab)  +  jobs SELECT WHERE status = 'active'
+ *   jobs.company_id = companies.id se jobs ko company ke neeche group karta hai.
+ */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { companyRowToApi, jobRowToApi } from '@/lib/mappers';

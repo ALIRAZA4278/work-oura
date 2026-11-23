@@ -1,3 +1,19 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * Database se connection YAHIN banta hai. Har API route isi file ka
+ * getSupabaseAdmin() use karta hai.
+ *
+ *   .env.local / Netlify env  -->  createClient(URL, KEY)  -->  Supabase PostgreSQL
+ *
+ * NEXT_PUBLIC_SUPABASE_URL   = Supabase project ka address
+ * SUPABASE_SERVICE_ROLE_KEY  = secret key (sirf server pe). RLS ko bypass
+ *                              karti hai, isliye browser code mein kabhi nahi.
+ * NEXT_PUBLIC_SUPABASE_ANON_KEY = public key (sirf getSupabaseBrowser, abhi unused)
+ *
+ * Usage:  const supabase = getSupabaseAdmin();
+ *         await supabase.from('jobs').select('*')   // = SELECT * FROM jobs
+ */
 import { createClient } from '@supabase/supabase-js';
 
 let adminClient = null;

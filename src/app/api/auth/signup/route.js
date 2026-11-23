@@ -1,3 +1,11 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * POST /api/auth/signup  <- context/AuthContext.js (sign-up page)
+ * Tables: accounts SELECT (email pehle se hai?), accounts INSERT
+ *   (email, password_hash, full_name, role). Triggers khud profiles aur
+ *   user_settings ki row bana dete hain. Phir sessions INSERT (auto login).
+ */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { hashPassword, validatePassword } from '@/lib/password';

@@ -1,3 +1,9 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * POST /api/auth/logout  <- context/AuthContext.js (Navbar logout)
+ * Tables: sessions UPDATE revoked_at = now()  (token band), cookie delete.
+ */
 import { NextResponse } from 'next/server';
 import { destroySession } from '@/lib/auth';
 

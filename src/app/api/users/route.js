@@ -1,3 +1,11 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * GET /api/users  <- app/dashboard/page.js (profile load)
+ *   accounts + profiles + user_settings (JOIN on account_id)
+ * PUT /api/users  <- app/dashboard/page.js (Profile tab save, settings toggles)
+ *   lib/accounts.js -> accounts / profiles / user_settings update
+ */
 import { NextResponse } from 'next/server';
 import { getCurrentAccount, serializeAccount } from '@/lib/auth';
 import { updateCurrentAccount } from '@/lib/accounts';

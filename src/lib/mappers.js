@@ -1,4 +1,16 @@
 /**
+ * DB CONNECTION MAP
+ *
+ * Database column (snake_case)  <->  Frontend field (camelCase)
+ *   jobs.job_title        <-> jobTitle        jobs.salary_min  <-> salaryMin
+ *   jobs.required_skills  <-> requiredSkills  jobs.recruiter_id <-> recruiterId
+ *   applications.cover_letter <-> coverLetter applications.applied_at <-> appliedAt
+ *   companies.logo_url    <-> logo
+ * xxxRowToApi = DB se aaya data -> UI ke liye (SELECT ke baad)
+ * jobApiToRow = UI se aaya form  -> DB ke liye (INSERT / UPDATE se pehle)
+ * Users ka mapping lib/auth.js (serializeAccount) mein hai.
+ */
+/**
  * Postgres (snake_case) <-> Frontend (camelCase) mapping.
  * DB columns snake_case hain, UI camelCase expect karta hai — sab conversion yahan hoti hai.
  */

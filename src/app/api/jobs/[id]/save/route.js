@@ -1,3 +1,10 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * POST   <- app/jobs/page.js (bookmark)   saved_jobs UPSERT (account_id, job_id)
+ * DELETE <- app/jobs/page.js (unbookmark) saved_jobs DELETE
+ * saved_jobs ka primary key (account_id, job_id) = ek job ek user sirf ek baar.
+ */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentAccount } from '@/lib/auth';

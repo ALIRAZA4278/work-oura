@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * DB CONNECTION MAP
+ *
+ * Job detail page (/jobs/:id). Data:
+ *   GET  /api/jobs/:id        -> jobs row (+ views + 1)
+ *   POST /api/applications    -> applications INSERT
+ *        body: { jobId, coverLetter, resume, customFields: { name, email, phone,
+ *                skills, bio, education } }
+ *        -> applications.cover_letter, .name, .email, .phone, .skills ...
+ *   POST /api/apply           -> sirf email (DB nahi)
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth, useUser } from "@/context/AuthContext";

@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * DB CONNECTION MAP
+ *
+ * Poori site mein logged-in user yahan se aata hai (useUser()).
+ *   GET  /api/auth/me      -> sessions + accounts (+ profiles, user_settings)
+ *   POST /api/auth/login   -> accounts check + sessions INSERT
+ *   POST /api/auth/signup  -> accounts INSERT
+ *   POST /api/auth/logout  -> sessions.revoked_at UPDATE
+ */
+
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const AuthContext = createContext(null);

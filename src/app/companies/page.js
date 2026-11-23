@@ -1,5 +1,13 @@
 'use client';
 
+/**
+ * DB CONNECTION MAP
+ *
+ * Companies page (/companies). Data:
+ *   GET /api/companies -> companies table + har company ki active jobs
+ *   (jobs.company_id = companies.id)
+ */
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Building2, MapPin, Users, Briefcase, ExternalLink, Search, Filter, X, ChevronDown, Globe, Star } from 'lucide-react';

@@ -1,3 +1,10 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * GET /api/auth/me  <- context/AuthContext.js (har page load pe)
+ * Tables: sessions -> accounts + profiles + user_settings (lib/auth.js).
+ * Logged in nahi to { user: null }.
+ */
 import { NextResponse } from 'next/server';
 import { getCurrentAccount, serializeAccount } from '@/lib/auth';
 

@@ -1,3 +1,16 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * GET /api/jobs  <- app/jobs/page.js (jobs list, search, filters)
+ *   jobs SELECT WHERE status = 'active'
+ *     search   -> job_title / company_name / job_description ILIKE
+ *     filters  -> location, job_type, experience_level, category, salary_min
+ *   JOIN accounts via jobs.recruiter_id (recruiter ka naam / email)
+ * POST /api/jobs  <- app/dashboard/page.js + app/jobs/page.js (Post Job form)
+ *   companies SELECT/INSERT by slug  -> company_id milta hai
+ *   jobs INSERT (lib/mappers.js jobApiToRow: jobTitle -> job_title ...)
+ *   recruiter_id = logged-in accounts.id
+ */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentAccount } from '@/lib/auth';

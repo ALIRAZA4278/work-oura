@@ -1,3 +1,16 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * Profile / settings update (PUT /api/users). Dashboard ka "Profile" tab.
+ * Tables:
+ *   accounts      UPDATE full_name, role
+ *   profiles      UPSERT (account_id ke hisaab se): phone, bio, skills[],
+ *                 experience, education, resume_url, location, website,
+ *                 linkedin, github, avatar_url
+ *   user_settings UPSERT: email_notifications, job_alerts,
+ *                 profile_visibility, two_factor_auth
+ * UPSERT = row hai to UPDATE, nahi hai to INSERT.
+ */
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentAccount, serializeAccount } from '@/lib/auth';
 import { toStringArray } from '@/lib/mappers';

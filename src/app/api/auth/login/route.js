@@ -1,3 +1,10 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * POST /api/auth/login  <- context/AuthContext.js (sign-in page)
+ * Tables: accounts SELECT id, password_hash, is_active WHERE email = ?
+ *   password verify -> sessions INSERT + cookie set (lib/auth.js).
+ */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { verifyPassword } from '@/lib/password';

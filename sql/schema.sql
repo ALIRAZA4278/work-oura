@@ -3,6 +3,40 @@
 -- functions, RLS policies, seed companies).
 -- Run this once on a new Supabase project, BEFORE ALL_IN_ONE.sql.
 -- ============================================================
+--
+-- TABLES EK DOOSRE SE KAISE JUDE HAIN (relationship map)
+-- ------------------------------------------------------------
+-- accounts = center table. Har user (job seeker / recruiter / admin)
+-- ki ek row. Baaki sab tables isi ke `id` ko foreign key (FK) se
+-- point karti hain.
+--
+--   accounts.id ──1:1──> profiles.account_id        (extra info: bio, skills)
+--   accounts.id ──1:1──> user_settings.account_id   (dashboard toggles)
+--   accounts.id ──1:N──> sessions.account_id        (login sessions)
+--   accounts.id ──1:N──> companies.owner_id         (company kisne banai)
+--   accounts.id ──1:N──> jobs.recruiter_id          (recruiter ki jobs)
+--   companies.id ──1:N──> jobs.company_id           (company ki jobs)
+--   jobs.id     ──1:N──> applications.job_id        (job pe aayi applications)
+--   accounts.id ──1:N──> applications.applicant_id  (seeker ki applications)
+--   accounts.id ──1:N──> saved_jobs.account_id      (bookmarks)
+--   jobs.id     ──1:N──> saved_jobs.job_id
+--
+-- M:N relationships (beech mein ek table, 2 FKs ke saath):
+--   job seekers <──> jobs  via  applications  (apply kiya)
+--   users       <──> jobs  via  saved_jobs    (save kiya)
+--
+-- ON DELETE:
+--   cascade  = parent delete -> child rows bhi delete (account delete
+--              karo to uski profile, sessions, jobs, applications sab gaye)
+--   set null = parent delete -> child ka FK NULL (company delete ho to
+--              job rehti hai, bas company_id NULL)
+--
+-- App kaise use karta hai: browser -> Next.js API route (src/app/api)
+-- -> src/lib/supabase.js (service role key) -> ye tables.
+-- Column names snake_case hain (job_title); frontend camelCase use
+-- karta hai (jobTitle). Conversion src/lib/mappers.js mein hoti hai.
+-- Poori field-by-field list: DATABASE_GUIDE.md
+-- ============================================================
 
 -- >>>>>>>>>>>>>>>>>>>>  00_extensions.sql  <<<<<<<<<<<<<<<<<<<<
 
@@ -87,7 +121,7 @@ alter table public.accounts enable row level security;
 -- ------------------------------------------------------------
 create table if not exists public.sessions (
   id          uuid primary key default gen_random_uuid(),
-  account_id  uuid        not null references public.accounts(id) on delete cascade,
+  account_id  uuid        not null references public.accounts(id) on delete cascade,  -- FK: kaunse account ka session hai -> accounts.id (account delete = sessions bhi delete)
   token_hash  text        not null,
   user_agent  text,
   ip_address  text,
@@ -105,7 +139,7 @@ create index if not exists sessions_expires_at_idx        on public.sessions (ex
 -- ------------------------------------------------------------
 create table if not exists public.password_reset_tokens (
   id         uuid primary key default gen_random_uuid(),
-  account_id uuid        not null references public.accounts(id) on delete cascade,
+  account_id uuid        not null references public.accounts(id) on delete cascade,  -- FK: kis account ka reset token -> accounts.id
   token_hash text        not null,
   expires_at timestamptz not null,
   used_at    timestamptz,
@@ -120,7 +154,7 @@ create index if not exists password_reset_tokens_account_idx     on public.passw
 -- ------------------------------------------------------------
 create table if not exists public.email_verification_tokens (
   id         uuid primary key default gen_random_uuid(),
-  account_id uuid        not null references public.accounts(id) on delete cascade,
+  account_id uuid        not null references public.accounts(id) on delete cascade,  -- FK: kis account ka verify token -> accounts.id
   token_hash text        not null,
   expires_at timestamptz not null,
   used_at    timestamptz,
@@ -165,7 +199,7 @@ alter table public.email_verification_tokens enable row level security;
 -- ============================================================
 
 create table if not exists public.profiles (
-  account_id  uuid primary key references public.accounts(id) on delete cascade,
+  account_id  uuid primary key references public.accounts(id) on delete cascade,  -- PK + FK: har account ki EK profile (1:1) -> accounts.id
   phone       text,
   bio         text,
   skills      text[]      not null default '{}',
@@ -219,7 +253,7 @@ alter table public.profiles enable row level security;
 -- ============================================================
 
 create table if not exists public.user_settings (
-  account_id          uuid primary key references public.accounts(id) on delete cascade,
+  account_id          uuid primary key references public.accounts(id) on delete cascade,  -- PK + FK: har account ki EK settings row (1:1) -> accounts.id
   email_notifications boolean     not null default true,
   job_alerts          boolean     not null default true,
   profile_visibility  boolean     not null default false,
@@ -264,7 +298,7 @@ alter table public.user_settings enable row level security;
 
 create table if not exists public.companies (
   id          uuid primary key default gen_random_uuid(),
-  owner_id    uuid        references public.accounts(id) on delete set null,
+  owner_id    uuid        references public.accounts(id) on delete set null,  -- FK: company kis user ne banai -> accounts.id (user delete = NULL ho jata hai)
   name        text        not null,
   slug        text        not null,
   description text,
@@ -300,8 +334,8 @@ alter table public.companies enable row level security;
 
 create table if not exists public.jobs (
   id               uuid primary key default gen_random_uuid(),
-  recruiter_id     uuid        not null references public.accounts(id) on delete cascade,
-  company_id       uuid        references public.companies(id) on delete set null,
+  recruiter_id     uuid        not null references public.accounts(id) on delete cascade,  -- FK: job kis recruiter ne post ki -> accounts.id (1 recruiter : N jobs)
+  company_id       uuid        references public.companies(id) on delete set null,  -- FK: job kis company ki hai -> companies.id (1 company : N jobs)
 
   job_title        text        not null,
   company_name     text        not null,
@@ -382,8 +416,8 @@ alter table public.jobs enable row level security;
 
 create table if not exists public.applications (
   id              uuid primary key default gen_random_uuid(),
-  job_id          uuid        not null references public.jobs(id) on delete cascade,
-  applicant_id    uuid        not null references public.accounts(id) on delete cascade,
+  job_id          uuid        not null references public.jobs(id) on delete cascade,  -- FK: kis job pe apply kiya -> jobs.id (job delete = applications delete)
+  applicant_id    uuid        not null references public.accounts(id) on delete cascade,  -- FK: kis job seeker ne apply kiya -> accounts.id
 
   cover_letter    text,
   resume          text,
@@ -452,8 +486,8 @@ alter table public.applications enable row level security;
 -- ============================================================
 
 create table if not exists public.saved_jobs (
-  account_id uuid        not null references public.accounts(id) on delete cascade,
-  job_id     uuid        not null references public.jobs(id) on delete cascade,
+  account_id uuid        not null references public.accounts(id) on delete cascade,  -- FK: kis user ne save ki -> accounts.id
+  job_id     uuid        not null references public.jobs(id) on delete cascade,  -- FK: kaunsi job save hui -> jobs.id
   created_at timestamptz not null default now(),
   primary key (account_id, job_id)
 );

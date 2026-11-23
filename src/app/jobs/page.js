@@ -1,6 +1,15 @@
-
-
 "use client";
+
+/**
+ * DB CONNECTION MAP
+ *
+ * Jobs list page (/jobs). Data:
+ *   GET  /api/jobs?search=&location=&type=...  -> jobs table (status = 'active')
+ *   POST /api/jobs/:id/save, DELETE ...        -> saved_jobs table
+ *   POST /api/jobs                              -> jobs table (naya job)
+ * Fields jo UI dikhata hai (camelCase): jobTitle, companyName, location,
+ *   salaryMin/salaryMax, requiredSkills  (DB: job_title, company_name ...)
+ */
 
 import { Suspense } from "react";
 import { useState, useEffect, useCallback } from "react";

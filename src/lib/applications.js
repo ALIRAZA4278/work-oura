@@ -1,3 +1,19 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * Apply karne ka logic (POST /api/applications).
+ * Tables:
+ *   jobs          SELECT  (job active hai? recruiter_id kaun hai?)
+ *   applications  INSERT  job_id = jobs.id (FK), applicant_id = accounts.id (FK),
+ *                         cover_letter, status='pending', + snapshot fields
+ *                         (name, email, phone, skills, bio, education,
+ *                          job_title, company_name, location)
+ * APPLICATION_SELECT do JOIN karta hai:
+ *   job:jobs!applications_job_id_fkey             -> applications.job_id = jobs.id
+ *   applicant:accounts!applications_applicant_id_fkey -> applications.applicant_id = accounts.id
+ *     -> profiles (accounts.id = profiles.account_id)
+ * Unique index (job_id, applicant_id) do baar apply hone nahi deta (error 23505).
+ */
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { applicationRowToApi } from '@/lib/mappers';
 

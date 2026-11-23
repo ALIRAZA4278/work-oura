@@ -1,3 +1,14 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * GET  <- app/dashboard/page.js (Applications tab)
+ *   job seeker: applications WHERE applicant_id = mera id
+ *   recruiter : jobs WHERE recruiter_id = mera id -> un job ids ki applications
+ *   ?jobId=   : sirf us job ki applications (sirf us job ka recruiter)
+ * POST <- app/jobs/[id]/page.js (Apply form) -> lib/applications.js INSERT
+ * JOINs (APPLICATION_SELECT): applications.job_id -> jobs,
+ *   applications.applicant_id -> accounts -> profiles
+ */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentAccount } from '@/lib/auth';

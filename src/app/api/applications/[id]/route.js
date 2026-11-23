@@ -1,3 +1,11 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * GET   <- (ek application)  applications SELECT WHERE id = ?
+ * PATCH <- app/dashboard/page.js (status dropdown)
+ *   applications.job_id -> jobs.recruiter_id check (sirf us job ka recruiter)
+ *   applications UPDATE status  (pending / reviewing / interview / rejected / hired)
+ */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentAccount } from '@/lib/auth';

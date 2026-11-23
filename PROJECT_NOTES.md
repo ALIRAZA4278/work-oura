@@ -4,6 +4,7 @@
 - **Code:** https://github.com/ALIRAZA4278/work-oura
 - **Database:** Supabase (PostgreSQL)
 - **Demo login:** `aliadmin@gmail.com` / `AliAdmin@123` (detail section 2 mein)
+- **Database ↔ code guide:** `DATABASE_GUIDE.md` / `.html` (kaunsi file kaunsi table aur field se judi hai)
 
 Ye notes is liye hain taake group ka har member samajh sake ke project kya hai, kaise kaam karta hai, aur viva mein kya bolna hai. SQL / DBMS labs ki detail `sql/VIVA_NOTES.md` mein hai.
 

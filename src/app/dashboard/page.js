@@ -1,4 +1,16 @@
 "use client";
+
+/**
+ * DB CONNECTION MAP
+ *
+ * Dashboard (/dashboard). Data:
+ *   GET  /api/users                  -> accounts + profiles + user_settings
+ *   PUT  /api/users                  -> Profile tab save / settings toggles
+ *   GET  /api/dashboard              -> meri posted jobs (jobs.recruiter_id)
+ *   GET  /api/applications           -> applications (role ke hisaab se)
+ *   PATCH /api/applications/:id      -> applications.status change
+ *   POST/PUT/DELETE /api/jobs[/:id]  -> jobs table (Post / edit / delete job)
+ */
 import { css } from '@emotion/css';
 import JobPostModal from "@/components/JobPostModal";
 import dayjs from "dayjs";

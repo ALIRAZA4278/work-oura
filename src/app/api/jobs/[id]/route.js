@@ -1,3 +1,14 @@
+/**
+ * DB CONNECTION MAP
+ *
+ * GET    <- app/jobs/[id]/page.js (job detail)
+ *   jobs SELECT WHERE id = ?, JOIN accounts (recruiter)
+ *   rpc increment_job_views -> jobs.views + 1 (SQL function in schema.sql)
+ * PUT    <- app/dashboard/page.js (edit job)    jobs UPDATE
+ * DELETE <- app/dashboard/page.js (delete job)  jobs DELETE
+ *   (cascade: is job ki applications + saved_jobs bhi delete)
+ * PUT/DELETE sirf tab jab jobs.recruiter_id = logged-in user.
+ */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentAccount } from '@/lib/auth';
