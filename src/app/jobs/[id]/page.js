@@ -1,17 +1,16 @@
 "use client";
 
 /**
- * DB CONNECTION MAP
+ * File: src/app/jobs/[id]/page.js
  *
- * Job detail page (/jobs/:id). Data:
- *   GET  /api/jobs/:id        -> jobs row (+ views + 1)
- *   POST /api/applications    -> applications INSERT
+ * Job detail page (/jobs/:id): full job info and the Apply form.
+ * Data:
+ *   GET  /api/jobs/:id      -> one jobs row (also adds 1 to jobs.views)
+ *   POST /api/applications  -> INSERT into applications
  *        body: { jobId, coverLetter, resume, customFields: { name, email, phone,
  *                skills, bio, education } }
- *        -> applications.cover_letter, .name, .email, .phone, .skills ...
- *   POST /api/apply           -> sirf email (DB nahi)
+ *   POST /api/apply         -> email to the recruiter only (no database)
  */
-
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth, useUser } from "@/context/AuthContext";
@@ -418,7 +417,7 @@ export default function JobDetailPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg font-medium"
                   >
-                    Apply karne ke liye pehle sign in karein — sign in page khul raha hai...
+                    Please sign in to apply. Opening the sign-in page...
                   </motion.div>
                 )}
                 <motion.button

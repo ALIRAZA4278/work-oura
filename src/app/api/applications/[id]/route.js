@@ -1,10 +1,10 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/applications/[id]/route.js
  *
- * GET   <- (ek application)  applications SELECT WHERE id = ?
- * PATCH <- app/dashboard/page.js (status dropdown)
- *   applications.job_id -> jobs.recruiter_id check (sirf us job ka recruiter)
- *   applications UPDATE status  (pending / reviewing / interview / rejected / hired)
+ * GET   <- one application: SELECT FROM applications WHERE id = ?
+ * PATCH <- dashboard (status dropdown)
+ *   checks applications.job_id -> jobs.recruiter_id is the logged-in user, then
+ *   UPDATE applications SET status (pending / reviewing / interview / rejected / hired)
  */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -45,7 +45,7 @@ export async function GET(request, context) {
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
 
-    // Sirf applicant khud, job ka recruiter, ya admin dekh sakta hai
+    // Only the applicant, the job's recruiter, or an admin can view it
     const { data: job } = await supabase
       .from('jobs')
       .select('recruiter_id')
@@ -84,7 +84,7 @@ export async function PATCH(request, context) {
 
     if (!ALLOWED_STATUSES.includes(body.status)) {
       return NextResponse.json(
-        { error: `Status in me se hona chahiye: ${ALLOWED_STATUSES.join(', ')}` },
+        { error: `Status must be one of: ${ALLOWED_STATUSES.join(', ')}` },
         { status: 400 }
       );
     }
@@ -101,7 +101,7 @@ export async function PATCH(request, context) {
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
 
-    // Sirf job ka recruiter (ya admin) status badal sakta hai
+    // Only the job's recruiter (or an admin) can change the status
     const { data: job } = await supabase
       .from('jobs')
       .select('recruiter_id')
@@ -110,7 +110,7 @@ export async function PATCH(request, context) {
 
     if (job?.recruiter_id !== account.id && account.role !== 'admin') {
       return NextResponse.json(
-        { error: 'Sirf apni jobs ki applications update kar sakte hain' },
+        { error: 'You can only update applications for your own jobs' },
         { status: 403 }
       );
     }

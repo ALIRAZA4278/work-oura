@@ -1,8 +1,8 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/auth/logout/route.js
  *
  * POST /api/auth/logout  <- context/AuthContext.js (Navbar logout)
- * Tables: sessions UPDATE revoked_at = now()  (token band), cookie delete.
+ * UPDATE sessions SET revoked_at = now() for this token, and clears the cookie.
  */
 import { NextResponse } from 'next/server';
 import { destroySession } from '@/lib/auth';
@@ -10,9 +10,9 @@ import { destroySession } from '@/lib/auth';
 export async function POST() {
   try {
     await destroySession();
-    return NextResponse.json({ message: 'Logout ho gaya' });
+    return NextResponse.json({ message: 'Logged out' });
   } catch (error) {
     console.error('[POST /api/auth/logout] Error:', error);
-    return NextResponse.json({ error: 'Logout fail ho gaya' }, { status: 500 });
+    return NextResponse.json({ error: 'Logout failed' }, { status: 500 });
   }
 }

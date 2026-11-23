@@ -327,11 +327,11 @@ Subqueries can also go in:
 - **INNER vs LEFT JOIN?** INNER gives only matches. LEFT gives all left rows + NULLs.
 - **Correlated vs nested subquery?** Correlated runs once per outer row. Nested runs inside out, once.
 - **View vs table?** A view stores no data, only the query.
-- **Index ka fayda / nuqsan?** Faster reads, but extra space and slower writes.
-- **Schema kya hai?** A namespace (folder) of tables. Here `public` = app data and `lab` = practice.
-- **ON CONFLICT kya karta hai?** If the row already exists, it skips (or updates) instead of failing.
+- **Pros and cons of an index?** Faster reads, but extra space and slower writes.
+- **What is a schema?** A namespace (folder) of tables. Here `public` = app data and `lab` = practice.
+- **What does ON CONFLICT do?** If the row already exists, it skips (or updates) instead of failing.
 - **Weak entity example?** `profiles`, which can't exist without its account.
-- **M:N relationship kaise banta hai?** With a third table holding two FKs (`applications`).
+- **How is an M:N relationship built?** With a third table holding two FKs (`applications`).
 
 ---
 

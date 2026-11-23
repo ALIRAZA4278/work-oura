@@ -3,29 +3,29 @@
 - **Live website:** https://work-oura-jobs.netlify.app
 - **Code:** https://github.com/ALIRAZA4278/work-oura
 - **Database:** Supabase (PostgreSQL)
-- **Demo login:** `aliadmin@gmail.com` / `AliAdmin@123` (detail section 2 mein)
-- **Database ↔ code guide:** `DATABASE_GUIDE.md` / `.html` (kaunsi file kaunsi table aur field se judi hai)
+- **Demo login:** `aliadmin@gmail.com` / `AliAdmin@123` (details in section 2)
+- **Database ↔ code guide:** `DATABASE_GUIDE.md` / `.html` (which file is connected to which table and field)
 
-Ye notes is liye hain taake group ka har member samajh sake ke project kya hai, kaise kaam karta hai, aur viva mein kya bolna hai. SQL / DBMS labs ki detail `sql/VIVA_NOTES.md` mein hai.
-
----
-
-## 1. Project kya hai? (1 minute version)
-
-Ek **job board website**, jaise Rozee.pk ya Indeed. Do tarah ke users hain:
-
-| User | Kya kar sakta hai |
-|------|-------------------|
-| **Job Seeker** (naukri dhoondne wala) | Jobs dekhna, search/filter karna, job save karna, apply karna, apni applications ka status dekhna |
-| **Recruiter** (company wala) | Job post karna, apni jobs manage karna, applications dekhna, status badalna (pending → reviewing → interview → hired / rejected) |
-
-Sab data (users, jobs, applications) ek **PostgreSQL database** mein save hota hai jo Supabase pe chal raha hai.
+These notes help every group member understand what the project is, how it works, and what to say in the viva. The SQL / DBMS lab details are in `sql/VIVA_NOTES.md`.
 
 ---
 
-## 2. Website try kaise karein
+## 1. What is the project? (1-minute version)
 
-### Ready-made login (dummy data ke saath)
+A **job board website**, like Rozee.pk or Indeed. It has two kinds of users:
+
+| User | What they can do |
+|------|------------------|
+| **Job Seeker** (looking for a job) | Browse, search and filter jobs, save jobs, apply, track the status of their applications |
+| **Recruiter** (hiring for a company) | Post jobs, manage their jobs, see applications, change the status (pending → reviewing → interview → hired / rejected) |
+
+All data (users, jobs, applications) is stored in a **PostgreSQL database** running on Supabase.
+
+---
+
+## 2. How to try the website
+
+### Ready-made login (with sample data)
 
 | Field | Value |
 |-------|-------|
@@ -33,7 +33,7 @@ Sab data (users, jobs, applications) ek **PostgreSQL database** mein save hota h
 | **Password** | `AliAdmin@123` |
 | **Role** | Recruiter |
 
-Is account mein pehle se ye data hai:
+This account already has:
 
 | Job (WorkOura Tech) | Applications |
 |---------------------|--------------|
@@ -42,175 +42,177 @@ Is account mein pehle se ye data hai:
 | Database Administrator (Karachi, Contract) | 1: Ali Raza *(pending)* |
 | Web Development Intern (Islamabad) | 2: Zain Ahmed *(reviewing)*, Noor Fatima *(pending)* |
 
-Login karke **Dashboard** pe jao. Wahan apni jobs, applications aur unka status nazar aayega, aur status badal bhi sakte ho. Is account ne 2 jobs save bhi ki hui hain.
+Log in and open the **Dashboard** to see the jobs, the applications and their status, and to change a status. The account has also saved 2 jobs.
 
-### Apna account bana ke poora flow dekhna
+### Create your own accounts and test the full flow
 
-1. https://work-oura-jobs.netlify.app kholo.
-2. **Sign Up** pe jao aur account banao. Role chuno: *Job Seeker* ya *Recruiter*.
-3. **Recruiter** account se: Dashboard → job post karo.
-4. Doosre browser / incognito mein **Job Seeker** account banao → Jobs page → wo job kholo → **Apply**.
-5. Recruiter dashboard pe wapas jao → application nazar aayegi → status badlo.
-6. Seeker ke dashboard pe naya status dikhega.
+1. Open https://work-oura-jobs.netlify.app.
+2. Go to **Sign Up** and create an account. Choose a role: *Job Seeker* or *Recruiter*.
+3. With the **Recruiter** account: Dashboard → post a job.
+4. In another browser or an incognito window, create a **Job Seeker** account → Jobs page → open that job → **Apply**.
+5. Go back to the recruiter dashboard → the application is there → change its status.
+6. The seeker's dashboard shows the new status.
 
-> `aliadmin@gmail.com` ke ilawa demo data wale accounts (`ahmed.khan@demo.pk`, `ali.raza@demo.pk` waghera) **login nahi ho sakte**. Unka password jaan boojh kar fake rakha gaya hai, wo sirf SQL labs ke results ke liye hain. Test ke liye apna account banao.
+> Apart from `aliadmin@gmail.com`, the demo accounts (`ahmed.khan@demo.pk`, `ali.raza@demo.pk`, etc.) **cannot log in**. Their passwords are deliberately fake because they exist only for the SQL lab results. Create your own account for testing.
 
 ---
 
-## 3. Technology (kaunsi cheez kis liye)
+## 3. Technology (what each part is for)
 
-| Cheez | Kaam |
-|-------|------|
-| **Next.js 15** (React) | Website ke pages (frontend) **aur** server ke API routes (backend), dono ek hi project mein |
+| Part | Job |
+|------|-----|
+| **Next.js 15** (React) | The website pages (frontend) **and** the server API routes (backend), in one project |
 | **Tailwind CSS** | Styling / design |
-| **Supabase** | Online PostgreSQL database |
-| **supabase-js** | Library jis se server database se baat karta hai |
-| **Netlify** | Website ko internet pe host karta hai |
-| **GitHub** | Code store hota hai, version history |
+| **Supabase** | Hosted PostgreSQL database |
+| **supabase-js** | Library the server uses to talk to the database |
+| **Netlify** | Hosts the website on the internet |
+| **GitHub** | Stores the code and its history |
 
 ---
 
-## 4. System kaise kaam karta hai
+## 4. How the system works
 
 ```
- User ka Browser            Netlify (Next.js server)            Supabase
+ User's browser             Netlify (Next.js server)            Supabase
  ───────────────           ────────────────────────           ──────────
   React pages   ── fetch ─▶  /api/... routes   ── SQL ──▶   PostgreSQL tables
   (jobs, login,  ◀─ JSON ──  (login check,     ◀─ rows ──   (accounts, jobs,
    dashboard)                 validation)                    applications...)
 ```
 
-**Example: "Apply" button dabane pe kya hota hai?**
+**Example: what happens when you click "Apply"?**
 
-1. Browser `POST /api/applications` bhejta hai (job id, cover letter, skills waghera).
-2. Server cookie se check karta hai ke user logged in hai.
-3. Server check karta hai: job active hai? apni hi job to nahi? pehle apply to nahi kiya?
-4. Sab theek → `applications` table mein ek row **INSERT** hoti hai.
-5. Server "success" wapas bhejta hai → screen pe "Application submitted" aata hai.
+1. The browser sends `POST /api/applications` (job id, cover letter, skills, etc.).
+2. The server reads the cookie to check that the user is logged in.
+3. The server checks: is the job active? Is it the user's own job? Have they already applied?
+4. If everything is fine, one row is **INSERTed** into the `applications` table.
+5. The server sends back "success" → the screen shows "Application submitted".
 
-**Important rule:** browser **kabhi seedha database se baat nahi karta**. Har cheez server (API route) ke through jati hai. Is liye database ki secret key sirf server ke paas hoti hai, user ke browser mein nahi.
+**Important rule:** the browser **never talks to the database directly**. Everything goes through the server (API routes). That way the database's secret key stays on the server and never reaches the user's browser.
 
 ---
 
-## 5. Folder structure (sirf kaam ki files)
+## 5. Folder structure (the files that matter)
 
 ```
 work-oura/
 ├── src/
-│   ├── app/                  ← har folder = ek page / URL
+│   ├── app/                  ← every folder = one page / URL
 │   │   ├── page.js           ← Home page  (/)
 │   │   ├── jobs/             ← Jobs list (/jobs) + job detail (/jobs/[id])
 │   │   ├── companies/        ← Companies page
 │   │   ├── dashboard/        ← User dashboard (seeker + recruiter)
-│   │   ├── sign-in/ sign-up/ ← Login / Signup pages
+│   │   ├── sign-in/ sign-up/ ← Login / sign-up pages
 │   │   ├── about/            ← About page
-│   │   └── api/              ← BACKEND: server routes (database yahan se)
+│   │   └── api/              ← BACKEND: server routes (database access happens here)
 │   ├── components/           ← Navbar, Footer, JobCard, JobFilters, JobPostModal
-│   ├── context/AuthContext.js← Logged-in user ki info poori site mein share karta hai
-│   ├── lib/                  ← Helpers: supabase connection, auth, password, JWT
-│   └── middleware.js         ← Bina login /dashboard pe jao to /sign-in pe bhej deta hai
+│   ├── context/AuthContext.js← Shares the logged-in user with the whole site
+│   ├── lib/                  ← Helpers: database connection, auth, password, JWT
+│   └── middleware.js         ← Sends logged-out users from /dashboard to /sign-in
 ├── sql/
-│   ├── schema.sql            ← Poora database structure (tables, triggers, security)
+│   ├── schema.sql            ← The whole database structure (tables, triggers, security)
 │   ├── ALL_IN_ONE.sql        ← DBMS lab queries (lab00 – lab09)
-│   ├── labs/                 ← Wahi lab queries alag alag files mein
+│   ├── labs/                 ← The same lab queries, one file per lab
 │   └── VIVA_NOTES.md / .pdf  ← SQL viva notes
-└── .env.local                ← Secret keys (GitHub pe NAHI jati)
+└── .env.local                ← Secret keys (NOT pushed to GitHub)
 ```
+
+Every code file starts with a comment that explains what it does.
 
 ---
 
 ## 6. Database tables
 
-| Table | Kya store karta hai |
-|-------|---------------------|
-| `accounts` | Users: email, password ka hash, naam, role |
-| `sessions` | Kaun kab login hua (logout pe band) |
-| `profiles` | Skills, bio, resume (har account ka ek) |
-| `user_settings` | Dashboard ke settings toggles |
-| `companies` | Companies ki info |
+| Table | What it stores |
+|-------|----------------|
+| `accounts` | Users: email, password hash, name, role |
+| `sessions` | Who logged in and when (closed on logout) |
+| `profiles` | Skills, bio, resume (one per account) |
+| `user_settings` | Dashboard settings toggles |
+| `companies` | Company information |
 | `jobs` | Job posts: title, salary, location, status |
-| `applications` | Kis seeker ne kis job pe apply kiya + status |
-| `saved_jobs` | Bookmark ki hui jobs |
-| `password_reset_tokens`, `email_verification_tokens` | Future features ke liye bane hain |
+| `applications` | Which seeker applied to which job + status |
+| `saved_jobs` | Bookmarked jobs |
+| `password_reset_tokens`, `email_verification_tokens` | Created for future features |
 
 **Relationships:**
-- Ek recruiter → bohot si jobs (1 : N)
-- Ek company → bohot si jobs (1 : N)
-- Seekers ↔ Jobs = M : N, `applications` table ke through
-- Account ↔ Profile = 1 : 1 (naya account banate hi **trigger** khud profile aur settings bana deta hai)
+- One recruiter → many jobs (1 : N)
+- One company → many jobs (1 : N)
+- Seekers ↔ Jobs = M : N, through the `applications` table
+- Account ↔ Profile = 1 : 1 (as soon as an account is created, a **trigger** creates its profile and settings)
 
 ---
 
-## 7. Login system kaise kaam karta hai
+## 7. How login works
 
-Hum ne apna login system khud banaya hai (Supabase Auth use nahi kiya):
+We built our own login system (we do not use Supabase Auth):
 
-1. **Signup:** password ko **scrypt** se hash karke save karte hain. Asli password kahin save nahi hota.
-2. **Login:** password match ho to server ek **JWT token** banata hai aur use **httpOnly cookie** mein rakh deta hai (7 din valid). JavaScript is cookie ko chura nahi sakti.
-3. Har request pe server cookie check karta hai, aur `sessions` table mein dekhta hai ke session abhi bhi valid hai.
-4. **Logout:** session ko revoke kar dete hain aur cookie mita dete hain.
-
----
-
-## 8. Security (viva mein zaroor poochte hain)
-
-| Khatra | Hum ne kya kiya |
-|--------|-----------------|
-| Database leak ho jaye | Passwords hashed hain, asli password nahi milega |
-| Koi doosre ka data padhe | Private tables pe **RLS** + `REVOKE`. Public key se sirf active jobs aur companies padh sakte ho |
-| SQL Injection | supabase-js values ko parameter bana ke bhejta hai, aur search text saaf kiya jata hai |
-| Seeker apna status "hired" kar de | Server check karta hai, sirf us job ka recruiter status badal sakta hai (warna 403 error) |
-| Ek job pe do baar apply | Database mein **unique index** (job + applicant) |
-| Secret keys GitHub pe chali jayen | `.env.local` `.gitignore` mein hai. Keys sirf Netlify settings mein hain |
+1. **Sign up:** the password is hashed with **scrypt** before it is saved. The real password is never stored.
+2. **Login:** if the password matches, the server creates a **JWT token** and puts it in an **httpOnly cookie** (valid for 7 days). JavaScript on the page cannot read this cookie.
+3. On every request the server checks the cookie and looks in the `sessions` table to confirm the session is still valid.
+4. **Logout:** the session is revoked and the cookie is deleted.
 
 ---
 
-## 9. Project apne computer pe kaise chalayein
+## 8. Security (always asked in the viva)
+
+| Risk | What we did |
+|------|-------------|
+| The database leaks | Passwords are hashed, so the real passwords cannot be recovered |
+| Someone reads another user's data | **RLS** + `REVOKE` on private tables. The public key can only read active jobs and companies |
+| SQL injection | supabase-js sends values as parameters, and search text is cleaned |
+| A seeker sets their own status to "hired" | The server checks that only that job's recruiter can change the status (otherwise error 403) |
+| Applying twice to the same job | **Unique index** on (job + applicant) in the database |
+| Secret keys end up on GitHub | `.env.local` is in `.gitignore`. The keys live only in the Netlify settings |
+
+---
+
+## 9. How to run the project on your computer
 
 ```bash
 git clone https://github.com/ALIRAZA4278/work-oura
 cd work-oura
 npm install
-# .env.example ko copy karke .env.local banao aur keys daalo (group leader se lo)
+# copy .env.example to .env.local and fill in the keys (ask the group leader)
 npm run dev
-# browser mein http://localhost:3000 kholo
+# open http://localhost:3000 in the browser
 ```
 
-`.env.local` mein ye 5 cheezein chahiye:
+`.env.local` needs these 5 values:
 
-| Variable | Kya hai |
-|----------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project ka URL |
+| Variable | What it is |
+|----------|------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | The Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public (publishable) key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Secret key: **kisi ko share mat karo** |
-| `AUTH_SECRET` | Login tokens sign karne ka random secret (32+ characters) |
-| `NEXT_PUBLIC_APP_URL` | Website ka address |
+| `SUPABASE_SERVICE_ROLE_KEY` | Secret key: **never share it** |
+| `AUTH_SECRET` | Random secret for signing login tokens (32+ characters) |
+| `NEXT_PUBLIC_APP_URL` | The website address |
 
 ---
 
 ## 10. Deployment
 
-- Code **GitHub** pe hai → **Netlify** use build karta hai (`npm run build`) → website live.
-- Netlify pe upar wale 5 environment variables set hain.
-- Database ek dafa `sql/schema.sql` chala ke bana tha (Supabase SQL Editor mein).
+- The code is on **GitHub** → **Netlify** builds it (`npm run build`) → the website goes live.
+- The 5 environment variables above are set in Netlify.
+- The database was created once by running `sql/schema.sql` in the Supabase SQL Editor.
 
 ---
 
-## 11. Abhi kya kaam nahi karta (honest list)
+## 11. What does not work yet (honest list)
 
-- **Apply karne pe recruiter ko email:** code mojood hai, lekin Gmail ke credentials (`NM_EMAIL_USER`, `NM_EMAIL_PW`) set nahi hain. Is liye email nahi jati. Application phir bhi save ho jati hai.
-- **Forgot password / email verify:** tables bane hue hain, lekin pages abhi nahi bane.
+- **Email to the recruiter after an application:** the code exists, but the Gmail credentials (`NM_EMAIL_USER`, `NM_EMAIL_PW`) are not set, so no email is sent. The application is still saved.
+- **Forgot password / email verification:** the tables exist, but the pages are not built yet.
 
 ---
 
-## 12. Viva ke common sawal
+## 12. Common viva questions
 
-- **Project kya karta hai?** Job seekers aur recruiters ko jodne wala job board. Recruiter job post karta hai, seeker apply karta hai, recruiter status update karta hai.
-- **Frontend aur backend kya hain?** Dono Next.js mein. `src/app/*` ke pages frontend hain, `src/app/api/*` backend hai.
-- **Database kaunsa hai aur kyun?** PostgreSQL (Supabase). Relational data hai (users ↔ jobs ↔ applications), is liye tables aur foreign keys best hain.
-- **Password kaise save hota hai?** scrypt hash + random salt. Asli password save nahi hota.
-- **Login kaise yaad rehta hai?** JWT token httpOnly cookie mein, aur `sessions` table mein record.
-- **Browser seedha database se kyun nahi baat karta?** Taake secret key aur private data server pe hi rahe.
-- **Trigger ka example?** Naya account banne pe `profiles` aur `user_settings` ki row khud ban jati hai. `updated_at` bhi trigger se update hota hai.
-- **M:N relationship kahan hai?** Seekers ↔ Jobs, `applications` table ke through (do foreign keys).
-- **Hosting kahan hai?** Website Netlify pe, database Supabase pe, code GitHub pe.
+- **What does the project do?** A job board that connects job seekers and recruiters. Recruiters post jobs, seekers apply, recruiters update the status.
+- **What are the frontend and the backend?** Both are in Next.js. The pages in `src/app/*` are the frontend; `src/app/api/*` is the backend.
+- **Which database and why?** PostgreSQL (Supabase). The data is relational (users ↔ jobs ↔ applications), so tables and foreign keys fit best.
+- **How is the password stored?** scrypt hash + random salt. The real password is never stored.
+- **How does the site remember the login?** A JWT token in an httpOnly cookie, plus a record in the `sessions` table.
+- **Why doesn't the browser talk to the database directly?** So the secret key and private data stay on the server.
+- **Example of a trigger?** When a new account is created, its `profiles` and `user_settings` rows are created automatically. `updated_at` is also set by a trigger.
+- **Where is the M:N relationship?** Seekers ↔ Jobs, through the `applications` table (two foreign keys).
+- **Where is it hosted?** The website on Netlify, the database on Supabase, the code on GitHub.

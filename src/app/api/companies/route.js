@@ -1,9 +1,9 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/companies/route.js
  *
- * GET /api/companies  <- app/companies/page.js
- *   companies SELECT (sab)  +  jobs SELECT WHERE status = 'active'
- *   jobs.company_id = companies.id se jobs ko company ke neeche group karta hai.
+ * GET /api/companies  <- companies page
+ *   SELECT all companies + SELECT jobs WHERE status = 'active'
+ *   Groups jobs under their company with jobs.company_id = companies.id.
  */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -12,9 +12,9 @@ import { companyRowToApi, jobRowToApi } from '@/lib/mappers';
 export const dynamic = 'force-dynamic';
 
 /**
- * Companies + har company ki active jobs.
- * Jin jobs ka company_id null hai (purana data), unhe company_name se
- * group karke alag entry bana di jati hai taake page pe koi job miss na ho.
+ * Companies plus each company's active jobs.
+ * Jobs with a NULL company_id (older data) are grouped by company_name into
+ * their own entry, so no job is missing from the page.
  */
 export async function GET() {
   try {
@@ -64,7 +64,7 @@ export async function GET() {
     const companies = (companiesResult.data || []).map((row) => {
       const companyJobs = byCompanyId.get(row.id) || [];
 
-      // Same naam ki orphan jobs bhi isi company ke saath jod do
+      // Also attach orphan jobs that have the same company name
       const nameKey = row.name.trim().toLowerCase();
       const orphans = orphanJobsByName.get(nameKey);
       if (orphans) {
@@ -79,7 +79,7 @@ export async function GET() {
       };
     });
 
-    // Jin company names ka koi companies row hi nahi hai
+    // Company names that have no row in the companies table
     for (const [, orphanJobs] of orphanJobsByName) {
       const first = orphanJobs[0];
       companies.push({

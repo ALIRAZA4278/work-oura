@@ -1,17 +1,16 @@
 /**
- * DB CONNECTION MAP
+ * File: src/lib/auth.js
  *
- * Login session ka logic. Tables:
- *   sessions      INSERT (login), SELECT (har request), UPDATE revoked_at (logout)
- *   accounts      SELECT (current user), UPDATE last_login_at
- *   profiles      SELECT (accounts ke saath join, FK account_id)
- *   user_settings SELECT (accounts ke saath join, FK account_id)
- *
- * Flow: cookie "wk_session" (JWT) -> hashToken -> sessions.token_hash match
- *       -> sessions.account_id -> accounts.id -> poora user object.
- * serializeAccount() DB row ko frontend shape mein badalta hai:
- *   accounts.full_name -> name, profiles.resume_url -> profile.resume,
- *   user_settings.email_notifications -> settings.emailNotifications, waghera.
+ * Login sessions and "who is the current user".
+ * Tables:
+ *   sessions      INSERT on login, SELECT on every request, UPDATE revoked_at on logout
+ *   accounts      SELECT current user, UPDATE last_login_at
+ *   profiles      joined to accounts (FK account_id)
+ *   user_settings joined to accounts (FK account_id)
+ * Flow: "wk_session" cookie (JWT) -> hashToken -> match sessions.token_hash
+ *       -> sessions.account_id -> accounts.id -> full user object.
+ * serializeAccount() turns DB rows into the frontend shape
+ * (accounts.full_name -> name, profiles.resume_url -> profile.resume, ...).
  */
 import { cookies, headers } from 'next/headers';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -39,8 +38,8 @@ function cookieOptions() {
 }
 
 /**
- * Login ke baad session banata hai: JWT sign karke cookie set karta hai
- * aur uska hash `sessions` table me daalta hai (taake logout revoke ho sake).
+ * Creates a session after login: signs a JWT, sets it as a cookie, and stores
+ * its hash in the `sessions` table (so logout can revoke it).
  */
 export async function createSession(accountId) {
   const supabase = getSupabaseAdmin();
@@ -54,7 +53,7 @@ export async function createSession(accountId) {
     userAgent = headerList.get('user-agent');
     ipAddress = headerList.get('x-forwarded-for')?.split(',')[0]?.trim() || null;
   } catch {
-    // headers() sirf request scope me available hoti hai
+    // headers() is only available inside a request
   }
 
   const { error } = await supabase.from('sessions').insert({
@@ -65,7 +64,7 @@ export async function createSession(accountId) {
     expires_at: new Date(Date.now() + SESSION_MAX_AGE * 1000).toISOString(),
   });
 
-  if (error) throw new Error(`Session banane me error: ${error.message}`);
+  if (error) throw new Error(`Could not create session: ${error.message}`);
 
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, cookieOptions());
@@ -98,7 +97,7 @@ export async function destroySession() {
   cookieStore.set(SESSION_COOKIE, '', { ...cookieOptions(), maxAge: 0 });
 }
 
-/** Cookie se account id nikalta hai (JWT + DB session dono check karke). */
+/** Reads the account id from the cookie (checks both the JWT and the DB session). */
 export async function getSessionAccountId() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
@@ -121,7 +120,7 @@ export async function getSessionAccountId() {
   return data.account_id;
 }
 
-/** Account id se pura record (profile + settings ke saath). */
+/** Full account record by id (with profile and settings). */
 export async function getAccountById(accountId) {
   if (!accountId) return null;
 
@@ -137,13 +136,13 @@ export async function getAccountById(accountId) {
   return data;
 }
 
-/** Logged-in user ka pura record (profile + settings ke saath). Warna null. */
+/** Full record of the logged-in user (with profile and settings), or null. */
 export async function getCurrentAccount() {
   const accountId = await getSessionAccountId();
   return getAccountById(accountId);
 }
 
-/** Account ko frontend-friendly shape me badalta hai. */
+/** Converts an account row into the shape the frontend uses. */
 export function serializeAccount(account) {
   if (!account) return null;
 
@@ -186,7 +185,7 @@ export function serializeAccount(account) {
   };
 }
 
-/** Email normalize (DB me hamesha lowercase store hota hai). */
+/** Normalizes an email (always stored lowercase in the DB). */
 export function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
 }

@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * File: src/components/Footer.js
+ *
+ * Site footer: call-to-action banner, stats, link columns, contact info and
+ * social links. Static content.
+ */
 import Link from "next/link";
 import Image from "next/image";
 import { 

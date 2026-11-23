@@ -1,9 +1,9 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/dashboard/route.js
  *
- * GET /api/dashboard  <- app/dashboard/page.js (My Jobs + stats)
- *   jobs SELECT WHERE recruiter_id = logged-in accounts.id
- *   applications ( count ) = har job ki applications ginta hai (FK job_id se)
+ * GET /api/dashboard  <- dashboard (My Jobs + stats)
+ *   SELECT FROM jobs WHERE recruiter_id = the logged-in account
+ *   applications ( count ) counts each job's applications through the job_id FK
  */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -12,7 +12,7 @@ import { jobRowToApi } from '@/lib/mappers';
 
 export const dynamic = 'force-dynamic';
 
-/** Logged-in recruiter ki apni posted jobs (application count ke saath). */
+/** The logged-in recruiter's own posted jobs, with application counts. */
 export async function GET() {
   try {
     const account = await getCurrentAccount();

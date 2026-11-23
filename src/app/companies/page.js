@@ -1,13 +1,12 @@
 'use client';
 
 /**
- * DB CONNECTION MAP
+ * File: src/app/companies/page.js
  *
- * Companies page (/companies). Data:
- *   GET /api/companies -> companies table + har company ki active jobs
- *   (jobs.company_id = companies.id)
+ * Companies page (/companies): company cards with their open jobs.
+ * Data: GET /api/companies -> companies table + each company's active jobs
+ * (jobs.company_id = companies.id).
  */
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Building2, MapPin, Users, Briefcase, ExternalLink, Search, Filter, X, ChevronDown, Globe, Star } from 'lucide-react';
@@ -96,7 +95,7 @@ export default function CompaniesPage() {
     value !== '' && value !== 0
   ).length + (searchTerm ? 1 : 0);
 
-  // /api/companies ab har company ke saath uski active jobs aur openPositions deta hai
+  // /api/companies returns each company with its active jobs and openPositions
   const fetchAllCompanies = async () => {
     setLoading(true);
     try {

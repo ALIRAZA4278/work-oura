@@ -1,15 +1,14 @@
 "use client";
 
 /**
- * DB CONNECTION MAP
+ * File: src/context/AuthContext.js
  *
- * Poori site mein logged-in user yahan se aata hai (useUser()).
- *   GET  /api/auth/me      -> sessions + accounts (+ profiles, user_settings)
- *   POST /api/auth/login   -> accounts check + sessions INSERT
- *   POST /api/auth/signup  -> accounts INSERT
- *   POST /api/auth/logout  -> sessions.revoked_at UPDATE
+ * Shares the logged-in user with the whole site (useAuth / useUser).
+ *   GET  /api/auth/me      -> who is logged in (sessions + accounts)
+ *   POST /api/auth/login   -> check password, create session
+ *   POST /api/auth/signup  -> create account, create session
+ *   POST /api/auth/logout  -> revoke session
  */
-
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const AuthContext = createContext(null);
@@ -46,7 +45,7 @@ export function AuthProvider({ children }) {
     const data = await res.json();
 
     if (!res.ok) {
-      return { ok: false, error: data.error || "Login fail ho gaya" };
+      return { ok: false, error: data.error || "Login failed" };
     }
 
     setUser(data.user);
@@ -63,7 +62,7 @@ export function AuthProvider({ children }) {
     const data = await res.json();
 
     if (!res.ok) {
-      return { ok: false, error: data.error || "Account nahi ban saka" };
+      return { ok: false, error: data.error || "Could not create the account" };
     }
 
     setUser(data.user);
@@ -101,12 +100,12 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth ko AuthProvider ke andar hi use karein");
+    throw new Error("useAuth must be used inside <AuthProvider>");
   }
   return context;
 }
 
-/** Clerk ke `useUser()` jaisi shape, taake pages me minimal changes lagen. */
+/** Same shape as Clerk's `useUser()`, so pages needed only small changes after the switch. */
 export function useUser() {
   const { user, isLoaded, isSignedIn } = useAuth();
   return { user, isLoaded, isSignedIn };

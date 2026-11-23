@@ -1,3 +1,9 @@
+/**
+ * File: next.config.mjs
+ *
+ * Next.js config. Lists which external hosts next/image may load images
+ * from (company logos, placeholders).
+ */
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {

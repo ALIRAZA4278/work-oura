@@ -1,12 +1,12 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/applications/route.js
  *
- * GET  <- app/dashboard/page.js (Applications tab)
- *   job seeker: applications WHERE applicant_id = mera id
- *   recruiter : jobs WHERE recruiter_id = mera id -> un job ids ki applications
- *   ?jobId=   : sirf us job ki applications (sirf us job ka recruiter)
- * POST <- app/jobs/[id]/page.js (Apply form) -> lib/applications.js INSERT
- * JOINs (APPLICATION_SELECT): applications.job_id -> jobs,
+ * GET  <- dashboard (Applications tab)
+ *   job seeker: applications WHERE applicant_id = me
+ *   recruiter : my job ids (jobs.recruiter_id = me) -> their applications
+ *   ?jobId=   : one job's applications (only that job's recruiter)
+ * POST <- job detail page (Apply form) -> lib/applications.js INSERT
+ * Joins (APPLICATION_SELECT): applications.job_id -> jobs,
  *   applications.applicant_id -> accounts -> profiles
  */
 import { NextResponse } from 'next/server';
@@ -36,7 +36,7 @@ export async function GET(request) {
         return NextResponse.json([], { status: 200 });
       }
 
-      // Sirf usi job ka owner uski applications dekh sakta hai
+      // Only the job's owner can see its applications
       const { data: job } = await supabase
         .from('jobs')
         .select('id, recruiter_id')
@@ -53,7 +53,7 @@ export async function GET(request) {
 
       query = query.eq('job_id', jobId);
     } else if (account.role === 'recruiter') {
-      // Recruiter: apni sari jobs ki applications
+      // Recruiter: applications for all of their jobs
       const { data: myJobs } = await supabase
         .from('jobs')
         .select('id')
@@ -65,9 +65,9 @@ export async function GET(request) {
       }
       query = query.in('job_id', jobIds);
     } else if (account.role === 'admin') {
-      // admin sab dekh sakta hai — koi filter nahi
+      // Admin sees everything, no filter
     } else {
-      // Job seeker: apni khud ki applications
+      // Job seeker: only their own applications
       query = query.eq('applicant_id', account.id);
     }
 

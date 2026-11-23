@@ -1,3 +1,9 @@
+/**
+ * File: eslint.config.mjs
+ *
+ * ESLint config. Uses Next.js's recommended "core-web-vitals" rules.
+ * Run with: npm run lint
+ */
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";

@@ -1,9 +1,9 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/auth/me/route.js
  *
- * GET /api/auth/me  <- context/AuthContext.js (har page load pe)
- * Tables: sessions -> accounts + profiles + user_settings (lib/auth.js).
- * Logged in nahi to { user: null }.
+ * GET /api/auth/me  <- context/AuthContext.js (every page load)
+ * Returns the logged-in user (sessions -> accounts + profiles + user_settings),
+ * or { user: null }.
  */
 import { NextResponse } from 'next/server';
 import { getCurrentAccount, serializeAccount } from '@/lib/auth';

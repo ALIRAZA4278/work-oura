@@ -1,3 +1,9 @@
+/**
+ * File: src/lib/password.js
+ *
+ * Password hashing and rules. Uses Node's built-in scrypt with a random salt.
+ * Stored format in accounts.password_hash: scrypt$<salt-hex>$<hash-hex>
+ */
 import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
 
@@ -7,8 +13,8 @@ const KEY_LENGTH = 64;
 const SALT_LENGTH = 16;
 
 /**
- * Password ko scrypt se hash karta hai. Format: scrypt$<salt-hex>$<hash-hex>
- * (Node built-in crypto — koi native/extra dependency nahi.)
+ * Hashes a password with scrypt. Format: scrypt$<salt-hex>$<hash-hex>
+ * (Node's built-in crypto, no extra dependency.)
  */
 export async function hashPassword(plainPassword) {
   const salt = randomBytes(SALT_LENGTH);
@@ -16,7 +22,7 @@ export async function hashPassword(plainPassword) {
   return `scrypt$${salt.toString('hex')}$${derived.toString('hex')}`;
 }
 
-/** Plain password ko stored hash ke against verify karta hai. */
+/** Checks a plain password against the stored hash. */
 export async function verifyPassword(plainPassword, storedHash) {
   if (!plainPassword || !storedHash) return false;
 
@@ -36,18 +42,18 @@ export async function verifyPassword(plainPassword, storedHash) {
 }
 
 /**
- * Password rules. Signup/reset dono jagah same validation.
- * @returns {string|null} error message, ya null agar valid hai
+ * Password rules, shared by sign-up and password reset.
+ * @returns {string|null} error message, or null if valid
  */
 export function validatePassword(password) {
   if (typeof password !== 'string' || password.length < 8) {
-    return 'Password kam se kam 8 characters ka hona chahiye';
+    return 'Password must be at least 8 characters';
   }
   if (password.length > 128) {
-    return 'Password 128 characters se zyada nahi ho sakta';
+    return 'Password cannot be longer than 128 characters';
   }
   if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-    return 'Password me kam se kam ek letter aur ek number hona chahiye';
+    return 'Password must contain at least one letter and one number';
   }
   return null;
 }

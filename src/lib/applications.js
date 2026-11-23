@@ -1,18 +1,18 @@
 /**
- * DB CONNECTION MAP
+ * File: src/lib/applications.js
  *
- * Apply karne ka logic (POST /api/applications).
+ * Apply-to-job logic for POST /api/applications.
  * Tables:
- *   jobs          SELECT  (job active hai? recruiter_id kaun hai?)
- *   applications  INSERT  job_id = jobs.id (FK), applicant_id = accounts.id (FK),
- *                         cover_letter, status='pending', + snapshot fields
- *                         (name, email, phone, skills, bio, education,
- *                          job_title, company_name, location)
- * APPLICATION_SELECT do JOIN karta hai:
- *   job:jobs!applications_job_id_fkey             -> applications.job_id = jobs.id
- *   applicant:accounts!applications_applicant_id_fkey -> applications.applicant_id = accounts.id
- *     -> profiles (accounts.id = profiles.account_id)
- * Unique index (job_id, applicant_id) do baar apply hone nahi deta (error 23505).
+ *   jobs          SELECT (is the job active? who is the recruiter?)
+ *   applications  INSERT job_id (FK -> jobs.id), applicant_id (FK -> accounts.id),
+ *                 cover_letter, status = 'pending', plus snapshot fields
+ *                 (name, email, phone, skills, bio, education, job_title,
+ *                  company_name, location)
+ * APPLICATION_SELECT joins:
+ *   job:jobs!applications_job_id_fkey                  applications.job_id = jobs.id
+ *   applicant:accounts!applications_applicant_id_fkey  applications.applicant_id = accounts.id
+ *     -> profiles                                      accounts.id = profiles.account_id
+ * The unique index (job_id, applicant_id) blocks applying twice (error 23505).
  */
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { applicationRowToApi } from '@/lib/mappers';
@@ -32,17 +32,17 @@ export const APPLICATION_SELECT = `
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Ek job pe application banata hai. `POST /api/applications` ise use karta hai.
+ * Creates an application for a job. Used by `POST /api/applications`.
  *
  * @returns {{status: number, body: object}}
  */
 export async function createApplication({ account, jobId, body = {} }) {
   if (!account) {
-    return { status: 401, body: { error: 'Apply karne ke liye login karein' } };
+    return { status: 401, body: { error: 'Please sign in to apply' } };
   }
 
   if (!jobId || !UUID_RE.test(jobId)) {
-    return { status: 400, body: { error: 'Valid job id nahi mila' } };
+    return { status: 400, body: { error: 'Invalid job id' } };
   }
 
   const supabase = getSupabaseAdmin();
@@ -55,7 +55,7 @@ export async function createApplication({ account, jobId, body = {} }) {
 
   if (jobError) {
     console.error('[applications] Job lookup failed:', jobError);
-    return { status: 500, body: { error: 'Job load nahi ho saka' } };
+    return { status: 500, body: { error: 'Could not load the job' } };
   }
 
   if (!job) {
@@ -63,11 +63,11 @@ export async function createApplication({ account, jobId, body = {} }) {
   }
 
   if (job.status !== 'active') {
-    return { status: 400, body: { error: 'Ye job ab applications accept nahi kar rahi' } };
+    return { status: 400, body: { error: 'This job is no longer accepting applications' } };
   }
 
   if (job.recruiter_id === account.id) {
-    return { status: 400, body: { error: 'Apni hi job pe apply nahi kar sakte' } };
+    return { status: 400, body: { error: 'You cannot apply to your own job' } };
   }
 
   const customFields = body.customFields || {};
@@ -97,10 +97,10 @@ export async function createApplication({ account, jobId, body = {} }) {
   if (error) {
     // 23505 = unique (job_id, applicant_id)
     if (error.code === '23505') {
-      return { status: 400, body: { error: 'Aap is job pe pehle hi apply kar chuke hain' } };
+      return { status: 400, body: { error: 'You have already applied to this job' } };
     }
     console.error('[applications] Insert failed:', error);
-    return { status: 500, body: { error: 'Application submit nahi hui', details: error.message } };
+    return { status: 500, body: { error: 'Could not submit the application', details: error.message } };
   }
 
   return { status: 201, body: applicationRowToApi(application) };

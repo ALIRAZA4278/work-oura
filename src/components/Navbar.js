@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * File: src/components/Navbar.js
+ *
+ * Top navigation bar on every page: logo, links (Browse Jobs, Companies,
+ * About), and either Sign in / Sign up buttons or the user menu with Dashboard
+ * and Logout. Reads the user from context/AuthContext.js.
+ */
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";

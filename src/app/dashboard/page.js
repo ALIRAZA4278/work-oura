@@ -1,15 +1,18 @@
 "use client";
 
 /**
- * DB CONNECTION MAP
+ * File: src/app/dashboard/page.js
  *
- * Dashboard (/dashboard). Data:
+ * Dashboard (/dashboard). Tabs: Overview (stats), Applications, My Jobs,
+ * Profile. Recruiters manage jobs and change application status; job seekers
+ * track their applications.
+ * Data:
  *   GET  /api/users                  -> accounts + profiles + user_settings
- *   PUT  /api/users                  -> Profile tab save / settings toggles
- *   GET  /api/dashboard              -> meri posted jobs (jobs.recruiter_id)
- *   GET  /api/applications           -> applications (role ke hisaab se)
- *   PATCH /api/applications/:id      -> applications.status change
- *   POST/PUT/DELETE /api/jobs[/:id]  -> jobs table (Post / edit / delete job)
+ *   PUT  /api/users                  -> save Profile tab / settings toggles
+ *   GET  /api/dashboard              -> my posted jobs (jobs.recruiter_id = me)
+ *   GET  /api/applications           -> applications (filtered by role)
+ *   PATCH /api/applications/:id      -> change applications.status
+ *   POST/PUT/DELETE /api/jobs[/:id]  -> create / edit / delete a job
  */
 import { css } from '@emotion/css';
 import JobPostModal from "@/components/JobPostModal";
@@ -497,7 +500,7 @@ export default function DashboardPage() {
         toast.error('Error posting job');
       }
     } else if (data) {
-      // Edit — recruiter server side session se aata hai, yahan mat bhejo
+      // Edit: the recruiter comes from the server-side session, do not send it here
       payload = { ...data };
       delete payload.id;
       delete payload.recruiter;
@@ -1167,9 +1170,9 @@ export default function DashboardPage() {
                         value={user?.email || ""}
                         disabled
                         className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-black placeholder-gray-500 cursor-not-allowed"
-                        title="Email change nahi ho sakta"
+                        title="Email cannot be changed"
                       />
-                      <p className="text-xs text-gray-500 mt-1">Email change nahi kiya ja sakta</p>
+                      <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                     </div>
 
                     <div className="text-black">

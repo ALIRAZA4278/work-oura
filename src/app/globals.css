@@ -1,3 +1,10 @@
+/*
+ * File: src/app/globals.css
+ *
+ * Global styles: Tailwind import, color tokens, one shared style for all
+ * form fields (input / textarea / select / option), and the blob animation used
+ * on the home page.
+ */
 @import "tailwindcss";
 
 :root {

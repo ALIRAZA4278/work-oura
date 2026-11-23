@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * DB CONNECTION MAP
+ * File: src/app/jobs/page.js
  *
- * Jobs list page (/jobs). Data:
+ * Jobs list page (/jobs): search, filters, sorting, pagination, bookmarks.
+ * Data:
  *   GET  /api/jobs?search=&location=&type=...  -> jobs table (status = 'active')
- *   POST /api/jobs/:id/save, DELETE ...        -> saved_jobs table
- *   POST /api/jobs                              -> jobs table (naya job)
- * Fields jo UI dikhata hai (camelCase): jobTitle, companyName, location,
- *   salaryMin/salaryMax, requiredSkills  (DB: job_title, company_name ...)
+ *   POST/DELETE /api/jobs/:id/save              -> saved_jobs table
+ *   POST /api/jobs                              -> jobs table (new job)
+ * The UI uses camelCase fields (jobTitle, companyName, salaryMin...) that map to
+ * the DB columns job_title, company_name, salary_min... (see lib/mappers.js).
  */
-
 import { Suspense } from "react";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";

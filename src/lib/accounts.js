@@ -1,15 +1,14 @@
 /**
- * DB CONNECTION MAP
+ * File: src/lib/accounts.js
  *
- * Profile / settings update (PUT /api/users). Dashboard ka "Profile" tab.
+ * Profile / settings update for PUT /api/users (dashboard Profile tab).
  * Tables:
  *   accounts      UPDATE full_name, role
- *   profiles      UPSERT (account_id ke hisaab se): phone, bio, skills[],
- *                 experience, education, resume_url, location, website,
- *                 linkedin, github, avatar_url
- *   user_settings UPSERT: email_notifications, job_alerts,
- *                 profile_visibility, two_factor_auth
- * UPSERT = row hai to UPDATE, nahi hai to INSERT.
+ *   profiles      UPSERT by account_id: phone, bio, skills[], experience, education,
+ *                 resume_url, location, website, linkedin, github, avatar_url
+ *   user_settings UPSERT: email_notifications, job_alerts, profile_visibility,
+ *                 two_factor_auth
+ * UPSERT = UPDATE the row if it exists, otherwise INSERT it.
  */
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentAccount, serializeAccount } from '@/lib/auth';
@@ -18,8 +17,8 @@ import { toStringArray } from '@/lib/mappers';
 const ALLOWED_ROLES = ['job_seeker', 'recruiter'];
 
 /**
- * Logged-in account ka profile / role / settings update karta hai.
- * `PUT /api/users` ise use karta hai.
+ * Updates the logged-in account's name, role, profile and settings.
+ * Used by `PUT /api/users`.
  *
  * @returns {{status: number, body: object}}
  */
@@ -42,7 +41,7 @@ export async function updateCurrentAccount(account, body = {}) {
 
   if (body.role !== undefined) {
     if (!ALLOWED_ROLES.includes(body.role)) {
-      return { status: 400, body: { error: 'Role sirf job_seeker ya recruiter ho sakta hai' } };
+      return { status: 400, body: { error: 'Role must be job_seeker or recruiter' } };
     }
     accountUpdates.role = body.role;
   }
@@ -51,7 +50,7 @@ export async function updateCurrentAccount(account, body = {}) {
     const { error } = await supabase.from('accounts').update(accountUpdates).eq('id', account.id);
     if (error) {
       console.error('[accounts] Account update failed:', error);
-      return { status: 500, body: { error: 'Profile update nahi hua' } };
+      return { status: 500, body: { error: 'Could not update the profile' } };
     }
   }
 
@@ -78,7 +77,7 @@ export async function updateCurrentAccount(account, body = {}) {
         .upsert(profileUpdates, { onConflict: 'account_id' });
       if (error) {
         console.error('[accounts] Profile update failed:', error);
-        return { status: 500, body: { error: 'Profile update nahi hua' } };
+        return { status: 500, body: { error: 'Could not update the profile' } };
       }
     }
   }
@@ -99,7 +98,7 @@ export async function updateCurrentAccount(account, body = {}) {
         .upsert(settingsUpdates, { onConflict: 'account_id' });
       if (error) {
         console.error('[accounts] Settings update failed:', error);
-        return { status: 500, body: { error: 'Settings update nahi hui' } };
+        return { status: 500, body: { error: 'Could not update the settings' } };
       }
     }
   }

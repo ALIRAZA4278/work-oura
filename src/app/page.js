@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * File: src/app/page.js
+ *
+ * Home page (/). Hero section, search entry point, feature highlights and
+ * calls to action. "Post a Job" sends logged-out users to sign in first.
+ */
 import Link from "next/link";
 import { Search, Briefcase, Users, TrendingUp, ArrowRight, CheckCircle, Star, Globe, Shield, Zap } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -59,7 +65,7 @@ export default function Home() {
               
               {showLoginError && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 font-medium">Job post karne ke liye pehle sign in karein — sign in page khul raha hai...</p>
+                  <p className="text-red-600 font-medium">Please sign in to post a job. Opening the sign-in page...</p>
                 </div>
               )}
               

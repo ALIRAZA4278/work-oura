@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * File: src/components/JobFilters.js
+ *
+ * Search bar and filter panel on the jobs page (keyword, location, job type,
+ * experience, category, salary, quick filters). Calls onFilterChange(filters)
+ * whenever a filter changes; the page turns that into /api/jobs query params.
+ */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 

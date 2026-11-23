@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * File: src/app/sign-up/page.js
+ *
+ * Sign-up page (/sign-up). Name, email, password and role (job seeker or
+ * recruiter) form with validation. Calls signup() from context/AuthContext.js
+ * and opens /dashboard on success.
+ */
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,14 +17,14 @@ import { useAuth } from "@/context/AuthContext";
 const ROLES = [
   {
     value: "job_seeker",
-    label: "Job dhoond raha hoon",
-    description: "Jobs browse karein aur apply karein",
+    label: "Looking for a job",
+    description: "Browse jobs and apply",
     icon: Search,
   },
   {
     value: "recruiter",
-    label: "Hiring kar raha hoon",
-    description: "Jobs post karein aur applications manage karein",
+    label: "Hiring",
+    description: "Post jobs and manage applications",
     icon: Briefcase,
   },
 ];
@@ -44,18 +51,18 @@ export default function SignUpPage() {
 
   const validate = () => {
     const next = {};
-    if (!form.name.trim()) next.name = "Naam required hai";
-    if (!form.email.trim()) next.email = "Email required hai";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = "Email valid nahi hai";
+    if (!form.name.trim()) next.name = "Name is required";
+    if (!form.email.trim()) next.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = "Please enter a valid email";
 
-    if (!form.password) next.password = "Password required hai";
-    else if (form.password.length < 8) next.password = "Password kam se kam 8 characters ka ho";
+    if (!form.password) next.password = "Password is required";
+    else if (form.password.length < 8) next.password = "Password must be at least 8 characters";
     else if (!/[a-zA-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
-      next.password = "Password me kam se kam ek letter aur ek number ho";
+      next.password = "Password must contain at least one letter and one number";
     }
 
     if (form.confirmPassword !== form.password) {
-      next.confirmPassword = "Passwords match nahi kar rahe";
+      next.confirmPassword = "Passwords do not match";
     }
 
     setErrors(next);
@@ -81,7 +88,7 @@ export default function SignUpPage() {
       return;
     }
 
-    toast.success("Account ban gaya! Welcome 🎉");
+    toast.success("Account created! Welcome 🎉");
     router.push("/dashboard");
     router.refresh();
   };
@@ -105,7 +112,7 @@ export default function SignUpPage() {
           noValidate
         >
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Aap kaun hain?</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">I am a</label>
             <div className="grid grid-cols-2 gap-3">
               {ROLES.map((role) => {
                 const Icon = role.icon;
@@ -183,14 +190,14 @@ export default function SignUpPage() {
                 autoComplete="new-password"
                 value={form.password}
                 onChange={(e) => handleChange("password", e.target.value)}
-                placeholder="Kam se kam 8 characters"
+                placeholder="At least 8 characters"
                 className={`${inputClass("password")} pr-11`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                aria-label={showPassword ? "Password chhupayein" : "Password dikhayein"}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -211,7 +218,7 @@ export default function SignUpPage() {
                 autoComplete="new-password"
                 value={form.confirmPassword}
                 onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                placeholder="Password dobara likhein"
+                placeholder="Re-enter password"
                 className={inputClass("confirmPassword")}
               />
             </div>
@@ -234,9 +241,9 @@ export default function SignUpPage() {
           </button>
 
           <p className="text-center text-sm text-gray-600">
-            Pehle se account hai?{" "}
+            Already have an account?{" "}
             <Link href="/sign-in" className="font-medium text-blue-600 hover:text-blue-700">
-              Sign in karein
+              Sign in
             </Link>
           </p>
         </form>

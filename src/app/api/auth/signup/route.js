@@ -1,10 +1,11 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/auth/signup/route.js
  *
  * POST /api/auth/signup  <- context/AuthContext.js (sign-up page)
- * Tables: accounts SELECT (email pehle se hai?), accounts INSERT
- *   (email, password_hash, full_name, role). Triggers khud profiles aur
- *   user_settings ki row bana dete hain. Phir sessions INSERT (auto login).
+ * Checks the email is free (SELECT accounts), hashes the password and inserts
+ * into accounts (email, password_hash, full_name, role). Database triggers then
+ * create the profiles and user_settings rows. Finally logs the user in
+ * (INSERT sessions + cookie).
  */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -23,10 +24,10 @@ export async function POST(request) {
     const role = ALLOWED_ROLES.includes(body.role) ? body.role : 'job_seeker';
 
     if (!name) {
-      return NextResponse.json({ error: 'Full name required hai' }, { status: 400 });
+      return NextResponse.json({ error: 'Full name is required' }, { status: 400 });
     }
     if (!isValidEmail(email)) {
-      return NextResponse.json({ error: 'Valid email address daalein' }, { status: 400 });
+      return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 });
     }
 
     const passwordError = validatePassword(password);
@@ -44,7 +45,7 @@ export async function POST(request) {
 
     if (existing) {
       return NextResponse.json(
-        { error: 'Is email se account pehle se mojood hai. Login karein.' },
+        { error: 'An account with this email already exists. Please sign in.' },
         { status: 409 }
       );
     }
@@ -61,12 +62,12 @@ export async function POST(request) {
       // 23505 = unique violation (race condition)
       if (error.code === '23505') {
         return NextResponse.json(
-          { error: 'Is email se account pehle se mojood hai. Login karein.' },
+          { error: 'An account with this email already exists. Please sign in.' },
           { status: 409 }
         );
       }
       console.error('[POST /api/auth/signup] Insert failed:', error);
-      return NextResponse.json({ error: 'Account nahi ban saka' }, { status: 500 });
+      return NextResponse.json({ error: 'Could not create the account' }, { status: 500 });
     }
 
     await createSession(account.id);
@@ -74,11 +75,11 @@ export async function POST(request) {
     const fullAccount = await getAccountById(account.id);
 
     return NextResponse.json(
-      { message: 'Account ban gaya', user: serializeAccount(fullAccount) },
+      { message: 'Account created', user: serializeAccount(fullAccount) },
       { status: 201 }
     );
   } catch (error) {
     console.error('[POST /api/auth/signup] Error:', error);
-    return NextResponse.json({ error: 'Signup fail ho gaya' }, { status: 500 });
+    return NextResponse.json({ error: 'Sign up failed' }, { status: 500 });
   }
 }

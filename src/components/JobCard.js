@@ -1,3 +1,10 @@
+/**
+ * File: src/components/JobCard.js
+ *
+ * One job in the jobs list: title, company, location, type, salary, skills,
+ * posted date, bookmark button and Apply / View details buttons.
+ * Props: job, onApply, onBookmark, isBookmarked.
+ */
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';

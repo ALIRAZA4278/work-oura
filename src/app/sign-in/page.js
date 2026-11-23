@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * File: src/app/sign-in/page.js
+ *
+ * Sign-in page (/sign-in). Email + password form with client-side
+ * validation. Calls login() from context/AuthContext.js, then redirects to the
+ * ?redirect= page (default /dashboard).
+ */
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -26,9 +33,9 @@ function SignInForm() {
 
   const validate = () => {
     const next = {};
-    if (!form.email.trim()) next.email = "Email required hai";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = "Email valid nahi hai";
-    if (!form.password) next.password = "Password required hai";
+    if (!form.email.trim()) next.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = "Please enter a valid email";
+    if (!form.password) next.password = "Password is required";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -102,7 +109,7 @@ function SignInForm() {
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            aria-label={showPassword ? "Password chhupayein" : "Password dikhayein"}
+            aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -120,9 +127,9 @@ function SignInForm() {
       </button>
 
       <p className="text-center text-sm text-gray-600">
-        Account nahi hai?{" "}
+        Don&apos;t have an account?{" "}
         <Link href="/sign-up" className="font-medium text-blue-600 hover:text-blue-700">
-          Sign up karein
+          Sign up
         </Link>
       </p>
     </form>

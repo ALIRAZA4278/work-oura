@@ -1,9 +1,10 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/apply/route.js
  *
- * POST /api/apply  <- app/jobs/[id]/page.js (apply ke baad)
- * Database use NAHI karta. Sirf recruiter ko email bhejta hai (Gmail SMTP,
- * NM_EMAIL_USER / NM_EMAIL_PW). Application khud /api/applications save karta hai.
+ * POST /api/apply  <- job detail page (after applying)
+ * Does NOT touch the database. Emails the application to the recruiter through
+ * Gmail SMTP (NM_EMAIL_USER / NM_EMAIL_PW). The application itself is saved by
+ * POST /api/applications.
  */
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';

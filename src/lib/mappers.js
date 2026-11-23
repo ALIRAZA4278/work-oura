@@ -1,20 +1,15 @@
 /**
- * DB CONNECTION MAP
+ * File: src/lib/mappers.js
  *
- * Database column (snake_case)  <->  Frontend field (camelCase)
- *   jobs.job_title        <-> jobTitle        jobs.salary_min  <-> salaryMin
- *   jobs.required_skills  <-> requiredSkills  jobs.recruiter_id <-> recruiterId
- *   applications.cover_letter <-> coverLetter applications.applied_at <-> appliedAt
+ * Converts between database columns (snake_case) and frontend fields (camelCase):
+ *   jobs.job_title        <-> jobTitle         jobs.salary_min   <-> salaryMin
+ *   jobs.required_skills  <-> requiredSkills   jobs.recruiter_id <-> recruiterId
+ *   applications.cover_letter <-> coverLetter  applications.applied_at <-> appliedAt
  *   companies.logo_url    <-> logo
- * xxxRowToApi = DB se aaya data -> UI ke liye (SELECT ke baad)
- * jobApiToRow = UI se aaya form  -> DB ke liye (INSERT / UPDATE se pehle)
- * Users ka mapping lib/auth.js (serializeAccount) mein hai.
+ * xxxRowToApi = DB row -> UI object (after a SELECT)
+ * jobApiToRow = UI form -> DB row  (before an INSERT / UPDATE)
+ * User mapping lives in lib/auth.js (serializeAccount).
  */
-/**
- * Postgres (snake_case) <-> Frontend (camelCase) mapping.
- * DB columns snake_case hain, UI camelCase expect karta hai — sab conversion yahan hoti hai.
- */
-
 function toNumberOrNull(value) {
   if (value === null || value === undefined || value === '') return null;
   const parsed = Number(value);
@@ -66,7 +61,7 @@ export function jobRowToApi(row) {
   };
 }
 
-/** UI payload -> jobs row (insert/update ke liye) */
+/** UI payload -> jobs row (for insert / update) */
 export function jobApiToRow(body, { recruiterId, partial = false } = {}) {
   const row = {
     job_title: body.jobTitle,
@@ -92,7 +87,7 @@ export function jobApiToRow(body, { recruiterId, partial = false } = {}) {
   if (body.companyId) row.company_id = body.companyId;
 
   if (partial) {
-    // Sirf wohi keys rakho jo body me actually aayi hain
+    // Keep only the keys that were actually sent in the body
     const provided = {};
     const keyMap = {
       job_title: 'jobTitle',
@@ -168,7 +163,7 @@ export function applicationRowToApi(row) {
     applicantScore: row.applicant_score ?? null,
     status: row.status,
 
-    // Snapshot fields (UI directly inhe padhta hai)
+    // Snapshot fields (the UI reads these directly)
     name: row.name || applicant?.full_name || '',
     email: row.email || applicant?.email || '',
     phone: row.phone || '',

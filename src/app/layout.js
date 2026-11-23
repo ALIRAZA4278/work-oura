@@ -1,3 +1,9 @@
+/**
+ * File: src/app/layout.js
+ *
+ * Root layout: wraps every page. Loads the fonts and global CSS, and puts
+ * <AuthProvider> (logged-in user) and the toast notifications around all pages.
+ */
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/context/AuthContext";

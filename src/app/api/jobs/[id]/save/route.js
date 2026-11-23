@@ -1,9 +1,9 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/jobs/[id]/save/route.js
  *
- * POST   <- app/jobs/page.js (bookmark)   saved_jobs UPSERT (account_id, job_id)
- * DELETE <- app/jobs/page.js (unbookmark) saved_jobs DELETE
- * saved_jobs ka primary key (account_id, job_id) = ek job ek user sirf ek baar.
+ * POST   <- jobs page (bookmark):   UPSERT saved_jobs (account_id, job_id)
+ * DELETE <- jobs page (unbookmark): DELETE FROM saved_jobs
+ * saved_jobs has primary key (account_id, job_id), so a job is saved once per user.
  */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -12,12 +12,12 @@ import { UUID_RE } from '@/lib/applications';
 
 export const dynamic = 'force-dynamic';
 
-/** Job ko saved list me daalta hai (pehle se saved ho to bhi 200 deta hai). */
+/** Adds the job to the saved list (returns 200 even if it was already saved). */
 export async function POST(request, context) {
   try {
     const account = await getCurrentAccount();
     if (!account) {
-      return NextResponse.json({ error: 'Job save karne ke liye login karein' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to save jobs' }, { status: 401 });
     }
 
     const { id } = await context.params;
@@ -38,17 +38,17 @@ export async function POST(request, context) {
 
     if (error) {
       console.error('[POST /api/jobs/[id]/save] Insert failed:', error);
-      return NextResponse.json({ error: 'Job save nahi hui' }, { status: 500 });
+      return NextResponse.json({ error: 'Could not save the job' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'Job saved', saved: true });
   } catch (error) {
     console.error('[POST /api/jobs/[id]/save] Error:', error);
-    return NextResponse.json({ error: 'Job save nahi hui' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not save the job' }, { status: 500 });
   }
 }
 
-/** Saved list se job hata deta hai. */
+/** Removes the job from the saved list. */
 export async function DELETE(request, context) {
   try {
     const account = await getCurrentAccount();
@@ -70,12 +70,12 @@ export async function DELETE(request, context) {
 
     if (error) {
       console.error('[DELETE /api/jobs/[id]/save] Delete failed:', error);
-      return NextResponse.json({ error: 'Job unsave nahi hui' }, { status: 500 });
+      return NextResponse.json({ error: 'Could not remove the saved job' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'Job unsaved', saved: false });
   } catch (error) {
     console.error('[DELETE /api/jobs/[id]/save] Error:', error);
-    return NextResponse.json({ error: 'Job unsave nahi hui' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not remove the saved job' }, { status: 500 });
   }
 }

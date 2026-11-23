@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * File: src/app/about/page.js
+ *
+ * About page (/about). Static content: mission, values, why WorkOura,
+ * team. No data loading.
+ */
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 

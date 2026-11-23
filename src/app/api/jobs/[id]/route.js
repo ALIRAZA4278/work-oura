@@ -1,13 +1,12 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/jobs/[id]/route.js
  *
- * GET    <- app/jobs/[id]/page.js (job detail)
- *   jobs SELECT WHERE id = ?, JOIN accounts (recruiter)
- *   rpc increment_job_views -> jobs.views + 1 (SQL function in schema.sql)
- * PUT    <- app/dashboard/page.js (edit job)    jobs UPDATE
- * DELETE <- app/dashboard/page.js (delete job)  jobs DELETE
- *   (cascade: is job ki applications + saved_jobs bhi delete)
- * PUT/DELETE sirf tab jab jobs.recruiter_id = logged-in user.
+ * GET    <- job detail page: SELECT one job + JOIN accounts (recruiter);
+ *           rpc increment_job_views adds 1 to jobs.views (SQL function in schema.sql)
+ * PUT    <- dashboard (edit job):   UPDATE jobs
+ * DELETE <- dashboard (delete job): DELETE FROM jobs
+ *           (ON DELETE CASCADE also removes its applications and saved_jobs)
+ * PUT / DELETE only work when jobs.recruiter_id is the logged-in user.
  */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -51,7 +50,7 @@ export async function GET(request, context) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
-    // View counter (fail hone par response nahi rukna chahiye)
+    // View counter (if it fails, the response should still be sent)
     const { data: newViews } = await supabase.rpc('increment_job_views', { p_job_id: id });
 
     return NextResponse.json({ ...jobRowToApi(job), views: newViews ?? job.views ?? 0 });
@@ -93,7 +92,7 @@ export async function PUT(request, context) {
     const updates = jobApiToRow(body, { partial: true });
 
     if (!Object.keys(updates).length) {
-      return NextResponse.json({ error: 'Update karne ke liye kuch nahi mila' }, { status: 400 });
+      return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
     }
 
     const { data: updated, error } = await supabase
@@ -146,7 +145,7 @@ export async function DELETE(request, context) {
       return NextResponse.json({ error: 'You can only delete your own jobs' }, { status: 403 });
     }
 
-    // applications ON DELETE CASCADE se khud delete ho jayengi
+    // Its applications are removed automatically by ON DELETE CASCADE
     const { error } = await supabase.from('jobs').delete().eq('id', id);
 
     if (error) {

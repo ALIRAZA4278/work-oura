@@ -1,9 +1,10 @@
 /**
- * Chhota HS256 JWT helper — Web Crypto pe bana hai, isliye ye
- * Node runtime (API routes) aur Edge runtime (middleware) dono me chalta hai.
- * Koi external dependency nahi.
+ * File: src/lib/jwt.js
+ *
+ * Small HS256 JWT helper built on Web Crypto, so it works in both the Node
+ * runtime (API routes) and the Edge runtime (middleware). No external library.
+ * Secret: AUTH_SECRET env var (32+ characters).
  */
-
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -11,7 +12,7 @@ function getSecret() {
   const secret = process.env.AUTH_SECRET;
   if (!secret || secret.length < 32) {
     throw new Error(
-      'AUTH_SECRET missing ya bohot chhota hai. .env.local me kam se kam 32 characters ka random string daalo.'
+      'AUTH_SECRET is missing or too short. Put a random string of at least 32 characters in .env.local.'
     );
   }
   return secret;
@@ -46,7 +47,7 @@ async function getKey() {
   );
 }
 
-/** Payload ko sign karke JWT string return karta hai. */
+/** Signs the payload and returns a JWT string. */
 export async function signToken(payload, expiresInSeconds = 60 * 60 * 24 * 7) {
   const issuedAt = Math.floor(Date.now() / 1000);
   const body = { ...payload, iat: issuedAt, exp: issuedAt + expiresInSeconds };
@@ -55,7 +56,7 @@ export async function signToken(payload, expiresInSeconds = 60 * 60 * 24 * 7) {
   return `${data}.${bytesToBase64Url(new Uint8Array(signature))}`;
 }
 
-/** Token verify karta hai. Valid ho to payload, warna null. */
+/** Verifies a token. Returns the payload if valid, otherwise null. */
 export async function verifyToken(token) {
   if (!token || typeof token !== 'string') return null;
 
@@ -82,7 +83,7 @@ export async function verifyToken(token) {
   }
 }
 
-/** Session token ka SHA-256 hex hash (DB me plain token store nahi karte). */
+/** SHA-256 hex hash of a session token (the plain token is never stored in the DB). */
 export async function hashToken(token) {
   const digest = await crypto.subtle.digest('SHA-256', encoder.encode(token));
   return Array.from(new Uint8Array(digest))

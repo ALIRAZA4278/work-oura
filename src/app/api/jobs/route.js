@@ -1,15 +1,15 @@
 /**
- * DB CONNECTION MAP
+ * File: src/app/api/jobs/route.js
  *
- * GET /api/jobs  <- app/jobs/page.js (jobs list, search, filters)
- *   jobs SELECT WHERE status = 'active'
- *     search   -> job_title / company_name / job_description ILIKE
- *     filters  -> location, job_type, experience_level, category, salary_min
- *   JOIN accounts via jobs.recruiter_id (recruiter ka naam / email)
- * POST /api/jobs  <- app/dashboard/page.js + app/jobs/page.js (Post Job form)
- *   companies SELECT/INSERT by slug  -> company_id milta hai
- *   jobs INSERT (lib/mappers.js jobApiToRow: jobTitle -> job_title ...)
- *   recruiter_id = logged-in accounts.id
+ * GET /api/jobs  <- jobs page (list, search, filters, sorting, paging)
+ *   SELECT FROM jobs WHERE status = 'active'
+ *     search  -> job_title / company_name / job_description ILIKE
+ *     filters -> location, job_type, experience_level, category, salary_min
+ *   JOIN accounts via jobs.recruiter_id (recruiter name / email)
+ * POST /api/jobs  <- dashboard + jobs page (Post Job form)
+ *   find or create the company by slug -> company_id
+ *   INSERT INTO jobs (lib/mappers.js jobApiToRow: jobTitle -> job_title ...)
+ *   recruiter_id = the logged-in account
  */
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -26,7 +26,7 @@ const JOB_SELECT = `
   recruiter:accounts!jobs_recruiter_id_fkey ( id, full_name, email )
 `;
 
-/** PostgREST `or()` string ko todne wale characters hata do. */
+/** Remove characters that would break a PostgREST `or()` filter string. */
 function sanitizeSearch(value) {
   return String(value).replace(/[,()*%\\]/g, ' ').trim();
 }
@@ -161,7 +161,7 @@ export async function POST(request) {
     const account = await getCurrentAccount();
 
     if (!account) {
-      return NextResponse.json({ error: 'Job post karne ke liye login karein' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to post a job' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -179,19 +179,19 @@ export async function POST(request) {
     const missing = required.filter((field) => !String(body[field] || '').trim());
     if (missing.length) {
       return NextResponse.json(
-        { error: `Ye fields required hain: ${missing.join(', ')}` },
+        { error: `These fields are required: ${missing.join(', ')}` },
         { status: 400 }
       );
     }
 
     const supabase = getSupabaseAdmin();
 
-    // Job post karne wala automatically recruiter ban jata hai
+    // Whoever posts a job automatically becomes a recruiter
     if (account.role === 'job_seeker') {
       await supabase.from('accounts').update({ role: 'recruiter' }).eq('id', account.id);
     }
 
-    // Company find-or-create (taake /companies page pe bhi dikhe)
+    // Find or create the company (so it also shows on the /companies page)
     const companySlug = slugify(body.companyName);
     let companyId = null;
 
@@ -225,7 +225,7 @@ export async function POST(request) {
 
     if (row.salary_max < row.salary_min) {
       return NextResponse.json(
-        { error: 'Maximum salary minimum se kam nahi ho sakti' },
+        { error: 'Maximum salary cannot be lower than minimum salary' },
         { status: 400 }
       );
     }

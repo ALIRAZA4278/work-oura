@@ -4,38 +4,37 @@
 -- Run this once on a new Supabase project, BEFORE ALL_IN_ONE.sql.
 -- ============================================================
 --
--- TABLES EK DOOSRE SE KAISE JUDE HAIN (relationship map)
+-- HOW THE TABLES ARE CONNECTED (relationship map)
 -- ------------------------------------------------------------
--- accounts = center table. Har user (job seeker / recruiter / admin)
--- ki ek row. Baaki sab tables isi ke `id` ko foreign key (FK) se
--- point karti hain.
+-- accounts = the center table: one row per user (job seeker / recruiter /
+-- admin). Every other table points to its `id` with a foreign key (FK).
 --
 --   accounts.id ──1:1──> profiles.account_id        (extra info: bio, skills)
 --   accounts.id ──1:1──> user_settings.account_id   (dashboard toggles)
 --   accounts.id ──1:N──> sessions.account_id        (login sessions)
---   accounts.id ──1:N──> companies.owner_id         (company kisne banai)
---   accounts.id ──1:N──> jobs.recruiter_id          (recruiter ki jobs)
---   companies.id ──1:N──> jobs.company_id           (company ki jobs)
---   jobs.id     ──1:N──> applications.job_id        (job pe aayi applications)
---   accounts.id ──1:N──> applications.applicant_id  (seeker ki applications)
+--   accounts.id ──1:N──> companies.owner_id         (who created the company)
+--   accounts.id ──1:N──> jobs.recruiter_id          (a recruiter's jobs)
+--   companies.id ──1:N──> jobs.company_id           (a company's jobs)
+--   jobs.id     ──1:N──> applications.job_id        (applications to a job)
+--   accounts.id ──1:N──> applications.applicant_id  (a seeker's applications)
 --   accounts.id ──1:N──> saved_jobs.account_id      (bookmarks)
 --   jobs.id     ──1:N──> saved_jobs.job_id
 --
--- M:N relationships (beech mein ek table, 2 FKs ke saath):
---   job seekers <──> jobs  via  applications  (apply kiya)
---   users       <──> jobs  via  saved_jobs    (save kiya)
+-- M:N relationships (a table in the middle with 2 FKs):
+--   job seekers <──> jobs  via  applications  (applied)
+--   users       <──> jobs  via  saved_jobs    (saved)
 --
 -- ON DELETE:
---   cascade  = parent delete -> child rows bhi delete (account delete
---              karo to uski profile, sessions, jobs, applications sab gaye)
---   set null = parent delete -> child ka FK NULL (company delete ho to
---              job rehti hai, bas company_id NULL)
+--   cascade  = delete the parent -> its child rows are deleted too (delete an
+--              account and its profile, sessions, jobs, applications go too)
+--   set null = delete the parent -> the child's FK becomes NULL (delete a
+--              company and its jobs stay, with company_id = NULL)
 --
--- App kaise use karta hai: browser -> Next.js API route (src/app/api)
--- -> src/lib/supabase.js (service role key) -> ye tables.
--- Column names snake_case hain (job_title); frontend camelCase use
--- karta hai (jobTitle). Conversion src/lib/mappers.js mein hoti hai.
--- Poori field-by-field list: DATABASE_GUIDE.md
+-- How the app uses them: browser -> Next.js API route (src/app/api)
+-- -> src/lib/supabase.js (service role key) -> these tables.
+-- Columns are snake_case (job_title); the frontend uses camelCase
+-- (jobTitle). src/lib/mappers.js converts between them.
+-- Full field-by-field list: DATABASE_GUIDE.md
 -- ============================================================
 
 -- >>>>>>>>>>>>>>>>>>>>  00_extensions.sql  <<<<<<<<<<<<<<<<<<<<
@@ -46,14 +45,14 @@
 -- Run this FIRST, before every other file.
 -- ============================================================
 
--- gen_random_uuid() ke liye
+-- Needed for gen_random_uuid()
 create extension if not exists "pgcrypto";
 
--- Text search / trigram (job search me ilike fast karne ke liye)
+-- Trigram text search (makes ILIKE job search fast)
 create extension if not exists "pg_trgm";
 
 -- ------------------------------------------------------------
--- Har table ka updated_at automatically set karne wala trigger
+-- Trigger function that sets updated_at automatically on every table
 -- ------------------------------------------------------------
 create or replace function public.set_updated_at()
 returns trigger
@@ -70,7 +69,7 @@ $$;
 
 -- ============================================================
 -- 01_accounts.sql  --  ACCOUNT PART
--- User account table (email + password based, koi Clerk nahi)
+-- User accounts (email + password login, no third-party auth)
 -- Depends on: 00_extensions.sql
 -- ============================================================
 
@@ -101,7 +100,7 @@ create trigger accounts_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- ------------------------------------------------------------
--- RLS: sirf server (service_role key) hi is table ko chhoo sakta hai
+-- RLS: only the server (service_role key) can touch this table
 -- ------------------------------------------------------------
 alter table public.accounts enable row level security;
 
@@ -116,12 +115,12 @@ alter table public.accounts enable row level security;
 
 -- ------------------------------------------------------------
 -- Login sessions
--- App ek JWT cookie deta hai; uska SHA-256 hash yahan store hota hai
--- taake logout / revoke server side possible ho.
+-- The app issues a JWT cookie; its SHA-256 hash is stored here so that
+-- logout / revoke works on the server.
 -- ------------------------------------------------------------
 create table if not exists public.sessions (
   id          uuid primary key default gen_random_uuid(),
-  account_id  uuid        not null references public.accounts(id) on delete cascade,  -- FK: kaunse account ka session hai -> accounts.id (account delete = sessions bhi delete)
+  account_id  uuid        not null references public.accounts(id) on delete cascade,  -- FK: whose session -> accounts.id (delete the account = delete its sessions)
   token_hash  text        not null,
   user_agent  text,
   ip_address  text,
@@ -139,7 +138,7 @@ create index if not exists sessions_expires_at_idx        on public.sessions (ex
 -- ------------------------------------------------------------
 create table if not exists public.password_reset_tokens (
   id         uuid primary key default gen_random_uuid(),
-  account_id uuid        not null references public.accounts(id) on delete cascade,  -- FK: kis account ka reset token -> accounts.id
+  account_id uuid        not null references public.accounts(id) on delete cascade,  -- FK: whose reset token -> accounts.id
   token_hash text        not null,
   expires_at timestamptz not null,
   used_at    timestamptz,
@@ -154,7 +153,7 @@ create index if not exists password_reset_tokens_account_idx     on public.passw
 -- ------------------------------------------------------------
 create table if not exists public.email_verification_tokens (
   id         uuid primary key default gen_random_uuid(),
-  account_id uuid        not null references public.accounts(id) on delete cascade,  -- FK: kis account ka verify token -> accounts.id
+  account_id uuid        not null references public.accounts(id) on delete cascade,  -- FK: whose verification token -> accounts.id
   token_hash text        not null,
   expires_at timestamptz not null,
   used_at    timestamptz,
@@ -164,8 +163,8 @@ create table if not exists public.email_verification_tokens (
 create unique index if not exists email_verification_tokens_hash_key on public.email_verification_tokens (token_hash);
 
 -- ------------------------------------------------------------
--- Expired / revoked sessions ko saaf karne wala helper
--- (Supabase pg_cron se schedule kar sakte ho)
+-- Helper that deletes expired / revoked sessions
+-- (can be scheduled with Supabase pg_cron)
 -- ------------------------------------------------------------
 create or replace function public.purge_expired_sessions()
 returns integer
@@ -194,12 +193,12 @@ alter table public.email_verification_tokens enable row level security;
 
 -- ============================================================
 -- 03_profiles.sql  --  PROFILE PART
--- Job seeker / recruiter ka extra profile data
+-- Extra profile data for job seekers and recruiters
 -- Depends on: 00_extensions.sql, 01_accounts.sql
 -- ============================================================
 
 create table if not exists public.profiles (
-  account_id  uuid primary key references public.accounts(id) on delete cascade,  -- PK + FK: har account ki EK profile (1:1) -> accounts.id
+  account_id  uuid primary key references public.accounts(id) on delete cascade,  -- PK + FK: exactly ONE profile per account (1:1) -> accounts.id
   phone       text,
   bio         text,
   skills      text[]      not null default '{}',
@@ -223,7 +222,7 @@ create trigger profiles_set_updated_at
   before update on public.profiles
   for each row execute function public.set_updated_at();
 
--- Naya account bante hi khali profile row bana do
+-- Create an empty profile row as soon as a new account is created
 create or replace function public.create_profile_for_account()
 returns trigger
 language plpgsql
@@ -248,12 +247,12 @@ alter table public.profiles enable row level security;
 
 -- ============================================================
 -- 04_settings.sql  --  SETTINGS PART
--- Dashboard ke Settings tab ke toggles
+-- Toggles shown in the dashboard settings
 -- Depends on: 00_extensions.sql, 01_accounts.sql
 -- ============================================================
 
 create table if not exists public.user_settings (
-  account_id          uuid primary key references public.accounts(id) on delete cascade,  -- PK + FK: har account ki EK settings row (1:1) -> accounts.id
+  account_id          uuid primary key references public.accounts(id) on delete cascade,  -- PK + FK: exactly ONE settings row per account (1:1) -> accounts.id
   email_notifications boolean     not null default true,
   job_alerts          boolean     not null default true,
   profile_visibility  boolean     not null default false,
@@ -267,7 +266,7 @@ create trigger user_settings_set_updated_at
   before update on public.user_settings
   for each row execute function public.set_updated_at();
 
--- Naya account bante hi default settings row bana do
+-- Create a default settings row as soon as a new account is created
 create or replace function public.create_settings_for_account()
 returns trigger
 language plpgsql
@@ -292,13 +291,13 @@ alter table public.user_settings enable row level security;
 
 -- ============================================================
 -- 05_companies.sql  --  COMPANY PART
--- /companies page ka data
+-- Data for the /companies page
 -- Depends on: 00_extensions.sql, 01_accounts.sql
 -- ============================================================
 
 create table if not exists public.companies (
   id          uuid primary key default gen_random_uuid(),
-  owner_id    uuid        references public.accounts(id) on delete set null,  -- FK: company kis user ne banai -> accounts.id (user delete = NULL ho jata hai)
+  owner_id    uuid        references public.accounts(id) on delete set null,  -- FK: who created the company -> accounts.id (delete the user = set to NULL)
   name        text        not null,
   slug        text        not null,
   description text,
@@ -328,14 +327,14 @@ alter table public.companies enable row level security;
 
 -- ============================================================
 -- 06_job_post.sql  --  JOB POST PART
--- Recruiter jo job post karta hai
+-- Jobs posted by recruiters
 -- Depends on: 00_extensions.sql, 01_accounts.sql, 05_companies.sql
 -- ============================================================
 
 create table if not exists public.jobs (
   id               uuid primary key default gen_random_uuid(),
-  recruiter_id     uuid        not null references public.accounts(id) on delete cascade,  -- FK: job kis recruiter ne post ki -> accounts.id (1 recruiter : N jobs)
-  company_id       uuid        references public.companies(id) on delete set null,  -- FK: job kis company ki hai -> companies.id (1 company : N jobs)
+  recruiter_id     uuid        not null references public.accounts(id) on delete cascade,  -- FK: which recruiter posted the job -> accounts.id (1 recruiter : N jobs)
+  company_id       uuid        references public.companies(id) on delete set null,  -- FK: which company the job belongs to -> companies.id (1 company : N jobs)
 
   job_title        text        not null,
   company_name     text        not null,
@@ -374,7 +373,7 @@ create index if not exists jobs_salary_idx        on public.jobs (salary_min, sa
 create index if not exists jobs_skills_idx        on public.jobs using gin (required_skills);
 create index if not exists jobs_company_name_idx  on public.jobs (lower(company_name));
 
--- Search (ilike '%...%') ko fast karne ke liye trigram indexes
+-- Trigram indexes that make search (ilike '%...%') fast
 create index if not exists jobs_title_trgm_idx    on public.jobs using gin (job_title gin_trgm_ops);
 create index if not exists jobs_company_trgm_idx  on public.jobs using gin (company_name gin_trgm_ops);
 create index if not exists jobs_location_trgm_idx on public.jobs using gin (location gin_trgm_ops);
@@ -385,7 +384,7 @@ create trigger jobs_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- ------------------------------------------------------------
--- View counter (API se rpc('increment_job_views') call hota hai)
+-- View counter (the API calls rpc('increment_job_views'))
 -- ------------------------------------------------------------
 create or replace function public.increment_job_views(p_job_id uuid)
 returns integer
@@ -410,14 +409,14 @@ alter table public.jobs enable row level security;
 
 -- ============================================================
 -- 07_applications.sql  --  JOB APPLICATION PART
--- Job seeker jo application submit karta hai
+-- Applications submitted by job seekers
 -- Depends on: 00_extensions.sql, 01_accounts.sql, 06_job_post.sql
 -- ============================================================
 
 create table if not exists public.applications (
   id              uuid primary key default gen_random_uuid(),
-  job_id          uuid        not null references public.jobs(id) on delete cascade,  -- FK: kis job pe apply kiya -> jobs.id (job delete = applications delete)
-  applicant_id    uuid        not null references public.accounts(id) on delete cascade,  -- FK: kis job seeker ne apply kiya -> accounts.id
+  job_id          uuid        not null references public.jobs(id) on delete cascade,  -- FK: which job was applied to -> jobs.id (delete the job = delete its applications)
+  applicant_id    uuid        not null references public.accounts(id) on delete cascade,  -- FK: which job seeker applied -> accounts.id
 
   cover_letter    text,
   resume          text,
@@ -425,7 +424,7 @@ create table if not exists public.applications (
   applicant_score integer,
   status          text        not null default 'pending',
 
-  -- Snapshot fields (apply ke waqt ki values, baad me job edit ho to bhi safe)
+  -- Snapshot fields (values at the time of applying, safe if the job is edited later)
   name            text,
   email           text,
   phone           text,
@@ -444,7 +443,7 @@ create table if not exists public.applications (
     check (status in ('pending', 'reviewing', 'interview', 'rejected', 'hired'))
 );
 
--- Ek user ek job pe sirf ek hi baar apply kar sakta hai
+-- A user can apply to a job only once
 create unique index if not exists applications_job_applicant_key
   on public.applications (job_id, applicant_id);
 
@@ -459,7 +458,7 @@ create trigger applications_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- ------------------------------------------------------------
--- Recruiter ke dashboard ke liye: har job pe kitni applications
+-- For the recruiter dashboard: number of applications per job
 -- ------------------------------------------------------------
 create or replace view public.job_application_counts as
 select
@@ -486,8 +485,8 @@ alter table public.applications enable row level security;
 -- ============================================================
 
 create table if not exists public.saved_jobs (
-  account_id uuid        not null references public.accounts(id) on delete cascade,  -- FK: kis user ne save ki -> accounts.id
-  job_id     uuid        not null references public.jobs(id) on delete cascade,  -- FK: kaunsi job save hui -> jobs.id
+  account_id uuid        not null references public.accounts(id) on delete cascade,  -- FK: which user saved it -> accounts.id
+  job_id     uuid        not null references public.jobs(id) on delete cascade,  -- FK: which job was saved -> jobs.id
   created_at timestamptz not null default now(),
   primary key (account_id, job_id)
 );
@@ -502,16 +501,15 @@ alter table public.saved_jobs enable row level security;
 
 -- ============================================================
 -- 09_rls_policies.sql  --  SECURITY PART
--- Depends on: sab pichli files
+-- Depends on: all previous sections
 --
--- App ka server SUPABASE_SERVICE_ROLE_KEY use karta hai jo RLS
--- bypass karta hai. Isliye default = deny-all (koi policy nahi),
--- aur sirf public browse data (active jobs + companies) ko
--- anon key ke liye read-only khola gaya hai.
+-- The app's server uses SUPABASE_SERVICE_ROLE_KEY, which bypasses RLS.
+-- So the default is deny-all (no policy), and only the public browse
+-- data (active jobs + companies) is opened read-only for the anon key.
 -- ============================================================
 
 -- ------------------------------------------------------------
--- Public read: sirf active jobs
+-- Public read: active jobs only
 -- ------------------------------------------------------------
 drop policy if exists "jobs_public_read" on public.jobs;
 create policy "jobs_public_read"
@@ -531,11 +529,11 @@ create policy "companies_public_read"
   using (true);
 
 -- ------------------------------------------------------------
--- Baaki sab tables pe koi policy nahi =>
--- anon/authenticated key se kuch bhi read/write nahi ho sakta.
+-- No policy on any other table =>
+-- the anon/authenticated keys cannot read or write anything there.
 -- accounts, sessions, password_reset_tokens,
 -- email_verification_tokens, profiles, user_settings,
--- applications, saved_jobs  --> sirf service_role (server).
+-- applications, saved_jobs  --> service_role (server) only.
 -- ------------------------------------------------------------
 
 -- New Supabase projects no longer auto-grant privileges on new tables
@@ -550,7 +548,7 @@ grant execute on all functions in schema public to service_role;
 -- (the RLS policies above still limit jobs to status = 'active').
 grant select on public.jobs, public.companies to anon, authenticated;
 
--- Anon role ko in tables pe table-level grant bhi mat do
+-- Do not give the anon role table-level grants on these tables either
 revoke all on public.accounts                 from anon, authenticated;
 revoke all on public.sessions                  from anon, authenticated;
 revoke all on public.password_reset_tokens     from anon, authenticated;
@@ -560,7 +558,7 @@ revoke all on public.user_settings             from anon, authenticated;
 revoke all on public.applications              from anon, authenticated;
 revoke all on public.saved_jobs                from anon, authenticated;
 
--- Recruiter stats wala view bhi sirf server ke liye
+-- The recruiter stats view is server-only too
 revoke all on public.job_application_counts    from anon, authenticated;
 
 
@@ -568,15 +566,15 @@ revoke all on public.job_application_counts    from anon, authenticated;
 
 -- ============================================================
 -- 10_seed.sql  --  DEMO DATA (optional)
--- Sirf development ke liye. Production pe mat chalao.
--- Depends on: sab pichli files
+-- For development only. Do not run in production.
+-- Depends on: all previous sections
 -- ============================================================
 
 insert into public.companies (name, slug, description, industry, location, size, website, logo_url)
 values
-  ('TechNova',      'technova',      'Cloud aur AI products banane wali company.',        'Software',     'Karachi, PK',    '51-200',   'https://technova.example.com',  null),
-  ('BrightHire',    'brighthire',    'HR tech startup jo hiring ko easy banati hai.',     'HR Tech',      'Lahore, PK',     '11-50',    'https://brighthire.example.com',null),
+  ('TechNova',      'technova',      'Builds cloud and AI products.',                     'Software',     'Karachi, PK',    '51-200',   'https://technova.example.com',  null),
+  ('BrightHire',    'brighthire',    'HR tech startup that makes hiring easy.',           'HR Tech',      'Lahore, PK',     '11-50',    'https://brighthire.example.com',null),
   ('Finlytics',     'finlytics',     'Fintech analytics platform.',                       'Fintech',      'Islamabad, PK',  '201-500',  'https://finlytics.example.com', null),
-  ('PixelForge',    'pixelforge',    'Design aur creative studio.',                       'Design',       'Remote',         '11-50',    'https://pixelforge.example.com',null),
-  ('DataHarbor',    'dataharbor',    'Data engineering aur warehousing solutions.',       'Data',         'Karachi, PK',    '51-200',   'https://dataharbor.example.com',null)
+  ('PixelForge',    'pixelforge',    'Design and creative studio.',                       'Design',       'Remote',         '11-50',    'https://pixelforge.example.com',null),
+  ('DataHarbor',    'dataharbor',    'Data engineering and warehousing solutions.',       'Data',         'Karachi, PK',    '51-200',   'https://dataharbor.example.com',null)
 on conflict (slug) do nothing;

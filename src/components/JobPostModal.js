@@ -1,3 +1,11 @@
+/**
+ * File: src/components/JobPostModal.js
+ *
+ * "Create / Edit Job" popup form used by the dashboard and jobs page.
+ * Collects every job field (title, company, description, type, level, category,
+ * skills, location, salary, deadline, openings, contact email, apply link) and
+ * passes them to onSubmit. The parent sends them to POST or PUT /api/jobs.
+ */
 import React, { useState, useEffect } from "react";
 
 export default function JobPostModal({ open, onClose, onSubmit, editJob }) {
@@ -61,7 +69,7 @@ export default function JobPostModal({ open, onClose, onSubmit, editJob }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editJob) {
-      // Edit mode: dashboard ka handler (e, data) leta hai, isliye pehla arg null
+      // Edit mode: the dashboard handler takes (e, data), so the first argument is null
       onSubmit(null, {
         ...editJob,
         jobTitle,

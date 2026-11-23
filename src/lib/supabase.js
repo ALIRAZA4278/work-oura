@@ -1,18 +1,13 @@
 /**
- * DB CONNECTION MAP
+ * File: src/lib/supabase.js
  *
- * Database se connection YAHIN banta hai. Har API route isi file ka
- * getSupabaseAdmin() use karta hai.
- *
- *   .env.local / Netlify env  -->  createClient(URL, KEY)  -->  Supabase PostgreSQL
- *
- * NEXT_PUBLIC_SUPABASE_URL   = Supabase project ka address
- * SUPABASE_SERVICE_ROLE_KEY  = secret key (sirf server pe). RLS ko bypass
- *                              karti hai, isliye browser code mein kabhi nahi.
- * NEXT_PUBLIC_SUPABASE_ANON_KEY = public key (sirf getSupabaseBrowser, abhi unused)
- *
- * Usage:  const supabase = getSupabaseAdmin();
- *         await supabase.from('jobs').select('*')   // = SELECT * FROM jobs
+ * Creates the database connection. Every API route calls getSupabaseAdmin().
+ *   .env.local / Netlify env  ->  createClient(URL, KEY)  ->  Supabase PostgreSQL
+ * NEXT_PUBLIC_SUPABASE_URL      = the Supabase project address
+ * SUPABASE_SERVICE_ROLE_KEY     = secret key, server only. It bypasses RLS, so it
+ *                                 must never be used in browser code.
+ * NEXT_PUBLIC_SUPABASE_ANON_KEY = public key (getSupabaseBrowser, currently unused)
+ * Example: await getSupabaseAdmin().from('jobs').select('*')  // SELECT * FROM jobs
  */
 import { createClient } from '@supabase/supabase-js';
 
@@ -20,8 +15,8 @@ let adminClient = null;
 let browserClient = null;
 
 /**
- * Server-only client. Service role key RLS bypass karta hai,
- * isliye ye sirf API routes / server code me use karo — kabhi client component me nahi.
+ * Server-only client. The service role key bypasses RLS, so use this only in
+ * API routes / server code, never in a client component.
  */
 export function getSupabaseAdmin() {
   if (adminClient) return adminClient;
@@ -30,10 +25,10 @@ export function getSupabaseAdmin() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL missing hai — .env.local me add karein');
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL is missing. Add it to .env.local');
   }
   if (!serviceRoleKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY missing hai — .env.local me add karein');
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is missing. Add it to .env.local');
   }
 
   adminClient = createClient(url, serviceRoleKey, {
@@ -43,7 +38,7 @@ export function getSupabaseAdmin() {
   return adminClient;
 }
 
-/** Browser-safe client (anon key). Sirf public read ke liye — jobs aur companies. */
+/** Browser-safe client (anon key). Public reads only: jobs and companies. */
 export function getSupabaseBrowser() {
   if (browserClient) return browserClient;
 
@@ -52,7 +47,7 @@ export function getSupabaseBrowser() {
 
   if (!url || !anonKey) {
     throw new Error(
-      'NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY missing hai — .env.local me add karein'
+      'NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY is missing. Add it to .env.local'
     );
   }
 

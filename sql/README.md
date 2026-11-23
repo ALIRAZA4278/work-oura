@@ -1,23 +1,23 @@
-# SQL Schema — Supabase (PostgreSQL)
+# SQL: Supabase (PostgreSQL)
 
-Poora schema `schema.sql` me hai. Supabase Dashboard →
-**SQL Editor** me poori file paste karke ek baar Run kar dein.
+The whole project schema is in `schema.sql`. In the Supabase Dashboard, open the
+**SQL Editor**, paste the full file and run it once.
 
-| Section | Kis part ka | Tables / Objects |
-|---|-------------|------------------|
+| Section | Part | Tables / objects |
+|---------|------|------------------|
 | `00_extensions` | Setup | `pgcrypto`, `pg_trgm`, `set_updated_at()` |
 | `01_accounts` | **Account** | `accounts` |
 | `02_login` | **Login** | `sessions`, `password_reset_tokens`, `email_verification_tokens`, `purge_expired_sessions()` |
 | `03_profiles` | **Profile** | `profiles` (+ auto-create trigger) |
 | `04_settings` | **Settings** | `user_settings` (+ auto-create trigger) |
 | `05_companies` | **Company** | `companies` |
-| `06_job_post` | **Job Post** | `jobs`, `increment_job_views()` |
-| `07_applications` | **Job Application** | `applications`, `job_application_counts` view |
-| `08_saved_jobs` | **Saved Jobs** | `saved_jobs` |
+| `06_job_post` | **Job post** | `jobs`, `increment_job_views()` |
+| `07_applications` | **Job application** | `applications`, `job_application_counts` view |
+| `08_saved_jobs` | **Saved jobs** | `saved_jobs` |
 | `09_rls_policies` | **Security / RLS** | policies + grants |
 | `10_seed` | Demo data (optional) | sample companies |
 
-## DBMS Lab queries (`labs/`)
+## DBMS lab queries (`labs/`)
 
 Queries for every topic of the lab manuals, written on this project's tables,
 with a comment on every topic and query. Run them in order after `schema.sql`:
@@ -36,7 +36,7 @@ with a comment on every topic and query. Run them in order after `schema.sql`:
 
 - DDL / UPDATE / DELETE practice runs in the `lab` schema, so `public` (the app's data) is safe.
 - `ALL_IN_ONE.sql` contains all 9 lab files in one file (run it after `schema.sql`).
-- Supabase SQL Editor only shows the last result: highlight one query and click Run to see its result.
+- The Supabase SQL Editor only shows the last result: highlight one query and click Run to see its result.
 - The lab manuals use Oracle / MySQL / SQL Server syntax; the PostgreSQL difference
   (MINUS -> EXCEPT, TOP -> LIMIT, MODIFY -> ALTER COLUMN TYPE, SYSDATE -> CURRENT_DATE)
   is noted in a comment where it applies.
@@ -49,14 +49,13 @@ psql "$SUPABASE_DB_URL" -f sql/schema.sql
 psql "$SUPABASE_DB_URL" -f sql/ALL_IN_ONE.sql   # DBMS lab queries
 ```
 
-
 ## Notes
 
-- **Auth Supabase Auth se nahi chalta.** Apna khud ka email+password login hai:
-  password `bcrypt` se hash hota hai (`accounts.password_hash`), aur session ek
-  signed JWT cookie hai jiska SHA-256 hash `sessions.token_hash` me save hota hai
-  (isliye logout / revoke server side kaam karta hai).
-- Server-side code `SUPABASE_SERVICE_ROLE_KEY` use karta hai jo RLS bypass karta hai.
-  Ye key kabhi bhi browser me expose mat karna.
-- Sab tables pe RLS **on** hai. Sirf `jobs` (active) aur `companies` anon key se
-  readable hain — baaki sab server-only.
+- **Login does not use Supabase Auth.** The app has its own email + password login:
+  the password is hashed with `scrypt` (`accounts.password_hash`), and the session
+  is a signed JWT cookie whose SHA-256 hash is stored in `sessions.token_hash`
+  (so logout / revocation works on the server).
+- Server-side code uses `SUPABASE_SERVICE_ROLE_KEY`, which bypasses RLS. Never
+  expose this key in the browser.
+- RLS is **on** for every table. Only `jobs` (active) and `companies` can be read
+  with the anon key; everything else is server-only.

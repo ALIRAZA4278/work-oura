@@ -61,15 +61,15 @@ li{margin:4px 0}
 </head>
 <body>
 <div class="layout">
-  <nav><p class="label">Contents</p><a href="#1-data-kaise-travel-karta-hai">1. Data kaise travel karta hai</a><a href="#2-tables-ek-doosre-se-kaise-judi-hain">2. Tables ek doosre se kaise judi hain</a><a href="#3-har-table-column-frontend-field-kahan-dikhta-hai">3. Har table: column → frontend field → kahan dikhta hai</a><a href="#4-har-feature-kaunsi-file-kaunsi-table">4. Har feature: kaunsi file → kaunsi table</a><a href="#5-database-ke-andar-automatic-cheezein-sql-schema-sql">5. Database ke andar automatic cheezein (sql/schema.sql)</a><a href="#6-saari-files-ek-nazar-mein">6. Saari files ek nazar mein</a><a href="#7-viva-mein-poochne-wale-sawal">7. Viva mein poochne wale sawal</a></nav>
-  <main><h1 id="database-frontend-guide">Database ↔ Frontend Guide</h1><p>Ye document batata hai ke <strong>website ki har screen database ki kis table aur kis column se judi hai, aur kaun si file ye kaam karti hai</strong>. Code parhte waqt isi ko saath rakho.</p>
+  <nav><p class="label">Contents</p><a href="#1-how-data-travels">1. How data travels</a><a href="#2-how-the-tables-are-connected">2. How the tables are connected</a><a href="#3-every-table-column-frontend-field-where-it-appears">3. Every table: column → frontend field → where it appears</a><a href="#4-every-feature-which-file-which-table">4. Every feature: which file → which table</a><a href="#5-things-that-run-automatically-inside-the-database-sql-schema-sql">5. Things that run automatically inside the database (sql/schema.sql)</a><a href="#6-all-files-at-a-glance">6. All files at a glance</a><a href="#7-viva-questions">7. Viva questions</a></nav>
+  <main><h1 id="database-frontend-guide">Database ↔ Frontend Guide</h1><p>This document explains <strong>which database table and column each screen of the website uses, and which file does the work</strong>. Keep it open while reading the code.</p>
 <ul>
 <li><strong>Database:</strong> Supabase (PostgreSQL). Structure: <code>sql/schema.sql</code></li>
-<li><strong>Har code file ke shuru mein</strong> <code>DB CONNECTION MAP</code> comment hai. Wahan bhi yahi info short mein likhi hai.</li>
+<li><strong>Every code file starts with a header comment</strong> that says what the file does and which tables it touches.</li>
 </ul>
 <hr>
-<h2 id="1-data-kaise-travel-karta-hai">1. Data kaise travel karta hai</h2><pre><code>① PAGE (browser)          src/app/jobs/page.js
-   fetch(&quot;/api/jobs&quot;)       data camelCase mein: jobTitle
+<h2 id="1-how-data-travels">1. How data travels</h2><pre><code>① PAGE (browser)          src/app/jobs/page.js
+   fetch(&quot;/api/jobs&quot;)       data in camelCase: jobTitle
         │   ▲
         ▼   │ JSON response
 ② API ROUTE (server)      src/app/api/jobs/route.js  →  GET() / POST()
@@ -80,39 +80,39 @@ li{margin:4px 0}
    URL + service role key (.env.local / Netlify)
         │   ▲
         ▼   │
-④ DATABASE (Supabase)     tables: jobs, accounts ...  columns snake_case: job_title
+④ DATABASE (Supabase)     tables: jobs, accounts ...  columns in snake_case: job_title
 </code></pre>
 <p><strong>4 layers, 4 folders:</strong></p>
 <div class="table-wrap"><table><thead><tr>
 <th>Layer</th>
 <th>Folder</th>
-<th>Kaam</th>
+<th>Job</th>
 </tr>
 </thead><tbody><tr>
 <td>① Page</td>
 <td><code>src/app/*/page.js</code>, <code>src/components/</code>, <code>src/context/</code></td>
-<td>Screen dikhana, form ka data <code>fetch()</code> se bhejna</td>
+<td>Shows the screen, sends form data with <code>fetch()</code></td>
 </tr>
 <tr>
 <td>② API route</td>
 <td><code>src/app/api/**/route.js</code></td>
-<td>Login check, validation, phir database query</td>
+<td>Checks login, validates, then queries the database</td>
 </tr>
 <tr>
 <td>③ Lib</td>
 <td><code>src/lib/</code></td>
-<td>Database connection, field naam badalna, login session</td>
+<td>Database connection, field name conversion, login sessions</td>
 </tr>
 <tr>
 <td>④ Database</td>
 <td><code>sql/schema.sql</code></td>
 <td>Tables, foreign keys, triggers, security</td>
 </tr>
-</tbody></table></div><p><strong>Database connection ek hi jagah banta hai:</strong> <code>src/lib/supabase.js</code> → <code>getSupabaseAdmin()</code>. Ye <code>.env.local</code> (ya Netlify) se <code>NEXT_PUBLIC_SUPABASE_URL</code> aur <code>SUPABASE_SERVICE_ROLE_KEY</code> le ke Supabase client banata hai. Har API route isi function ko call karta hai.</p>
-<p><strong>supabase-js ki query aur SQL ek hi cheez hain:</strong></p>
+</tbody></table></div><p><strong>The database connection is created in one place:</strong> <code>src/lib/supabase.js</code> → <code>getSupabaseAdmin()</code>. It reads <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>SUPABASE_SERVICE_ROLE_KEY</code> from <code>.env.local</code> (or Netlify) and creates the Supabase client. Every API route calls this function.</p>
+<p><strong>A supabase-js query and SQL are the same thing:</strong></p>
 <div class="table-wrap"><table><thead><tr>
-<th>supabase-js (code mein)</th>
-<th>SQL (lab mein)</th>
+<th>supabase-js (in the code)</th>
+<th>SQL (in the labs)</th>
 </tr>
 </thead><tbody><tr>
 <td><code>supabase.from(&#39;jobs&#39;).select(&#39;*&#39;).eq(&#39;status&#39;,&#39;active&#39;)</code></td>
@@ -151,114 +151,114 @@ li{margin:4px 0}
 <td><code>JOIN accounts ON accounts.id = jobs.recruiter_id</code></td>
 </tr>
 </tbody></table></div><hr>
-<h2 id="2-tables-ek-doosre-se-kaise-judi-hain">2. Tables ek doosre se kaise judi hain</h2><pre><code>accounts (id)                         ← center table, har user ki 1 row
+<h2 id="2-how-the-tables-are-connected">2. How the tables are connected</h2><pre><code>accounts (id)                         ← center table, one row per user
  ├── 1:1 ── profiles.account_id        bio, skills, phone
  ├── 1:1 ── user_settings.account_id   dashboard toggles
  ├── 1:N ── sessions.account_id        login sessions
- ├── 1:N ── companies.owner_id         company kisne banai
- ├── 1:N ── jobs.recruiter_id          recruiter ki jobs
- ├── 1:N ── applications.applicant_id  seeker ki applications
- └── 1:N ── saved_jobs.account_id      user ke bookmarks
+ ├── 1:N ── companies.owner_id         who created the company
+ ├── 1:N ── jobs.recruiter_id          a recruiter&#39;s jobs
+ ├── 1:N ── applications.applicant_id  a seeker&#39;s applications
+ └── 1:N ── saved_jobs.account_id      a user&#39;s bookmarks
 
 companies (id)
- └── 1:N ── jobs.company_id            company ki jobs
+ └── 1:N ── jobs.company_id            a company&#39;s jobs
 
 jobs (id)
- ├── 1:N ── applications.job_id        job pe aayi applications
- └── 1:N ── saved_jobs.job_id          kis kis ne save ki
+ ├── 1:N ── applications.job_id        applications to the job
+ └── 1:N ── saved_jobs.job_id          who saved it
 </code></pre>
-<p><strong>Har foreign key (FK):</strong></p>
+<p><strong>Every foreign key (FK):</strong></p>
 <div class="table-wrap"><table><thead><tr>
 <th>Child table.column</th>
 <th>→ Parent table.column</th>
-<th>Matlab</th>
-<th>Parent delete ho to</th>
+<th>Meaning</th>
+<th>When the parent is deleted</th>
 </tr>
 </thead><tbody><tr>
 <td><code>profiles.account_id</code></td>
 <td><code>accounts.id</code></td>
-<td>Har account ki 1 profile (1:1, ye PK bhi hai)</td>
-<td>profile delete</td>
+<td>One profile per account (1:1, also the PK)</td>
+<td>profile deleted</td>
 </tr>
 <tr>
 <td><code>user_settings.account_id</code></td>
 <td><code>accounts.id</code></td>
-<td>Har account ki 1 settings row (1:1)</td>
-<td>delete</td>
+<td>One settings row per account (1:1)</td>
+<td>deleted</td>
 </tr>
 <tr>
 <td><code>sessions.account_id</code></td>
 <td><code>accounts.id</code></td>
-<td>Kis user ka login session</td>
-<td>delete</td>
+<td>Whose login session</td>
+<td>deleted</td>
 </tr>
 <tr>
 <td><code>companies.owner_id</code></td>
 <td><code>accounts.id</code></td>
-<td>Company kisne banai</td>
-<td><code>NULL</code> ho jata hai</td>
+<td>Who created the company</td>
+<td>set to <code>NULL</code></td>
 </tr>
 <tr>
 <td><code>jobs.recruiter_id</code></td>
 <td><code>accounts.id</code></td>
-<td>Job kis recruiter ne post ki (1:N)</td>
-<td>job delete</td>
+<td>Which recruiter posted the job (1:N)</td>
+<td>job deleted</td>
 </tr>
 <tr>
 <td><code>jobs.company_id</code></td>
 <td><code>companies.id</code></td>
-<td>Job kis company ki hai (1:N)</td>
-<td><code>NULL</code> ho jata hai</td>
+<td>Which company the job belongs to (1:N)</td>
+<td>set to <code>NULL</code></td>
 </tr>
 <tr>
 <td><code>applications.job_id</code></td>
 <td><code>jobs.id</code></td>
-<td>Kis job pe apply kiya</td>
-<td>application delete</td>
+<td>Which job was applied to</td>
+<td>application deleted</td>
 </tr>
 <tr>
 <td><code>applications.applicant_id</code></td>
 <td><code>accounts.id</code></td>
-<td>Kis seeker ne apply kiya</td>
-<td>application delete</td>
+<td>Which seeker applied</td>
+<td>application deleted</td>
 </tr>
 <tr>
 <td><code>saved_jobs.account_id</code></td>
 <td><code>accounts.id</code></td>
-<td>Kis user ne save ki</td>
-<td>delete</td>
+<td>Which user saved it</td>
+<td>deleted</td>
 </tr>
 <tr>
 <td><code>saved_jobs.job_id</code></td>
 <td><code>jobs.id</code></td>
-<td>Kaunsi job save hui</td>
-<td>delete</td>
+<td>Which job was saved</td>
+<td>deleted</td>
 </tr>
 </tbody></table></div><p><strong>M:N (many-to-many):</strong></p>
 <ul>
-<li><strong>Seekers ↔ Jobs</strong> = <code>applications</code> table (do FKs: <code>job_id</code>, <code>applicant_id</code>). Ek seeker bohot jobs pe, ek job pe bohot seekers.</li>
-<li><strong>Users ↔ Jobs</strong> = <code>saved_jobs</code> table (PK = <code>account_id + job_id</code>).</li>
+<li><strong>Seekers ↔ Jobs</strong> = the <code>applications</code> table (two FKs: <code>job_id</code>, <code>applicant_id</code>). One seeker applies to many jobs; one job gets many seekers.</li>
+<li><strong>Users ↔ Jobs</strong> = the <code>saved_jobs</code> table (PK = <code>account_id + job_id</code>).</li>
 </ul>
 <p><strong>Uniqueness rules:</strong></p>
 <ul>
-<li><code>applications (job_id, applicant_id)</code> unique index → ek job pe ek user sirf 1 baar apply.</li>
-<li><code>saved_jobs</code> PK <code>(account_id, job_id)</code> → ek job sirf 1 baar save.</li>
-<li><code>accounts.email</code> unique + hamesha lowercase.</li>
-<li><code>companies.slug</code> unique → &quot;Tech Nova&quot; aur &quot;tech nova&quot; ek hi company.</li>
+<li>Unique index on <code>applications (job_id, applicant_id)</code> → a user can apply to a job only once.</li>
+<li><code>saved_jobs</code> PK <code>(account_id, job_id)</code> → a job can be saved only once per user.</li>
+<li><code>accounts.email</code> is unique and always lowercase.</li>
+<li><code>companies.slug</code> is unique → &quot;Tech Nova&quot; and &quot;tech nova&quot; are the same company.</li>
 </ul>
 <hr>
-<h2 id="3-har-table-column-frontend-field-kahan-dikhta-hai">3. Har table: column → frontend field → kahan dikhta hai</h2><p>Database mein naam <code>snake_case</code>, frontend mein <code>camelCase</code>. Ye badalna <code>src/lib/mappers.js</code> (jobs, applications, companies) aur <code>src/lib/auth.js</code> → <code>serializeAccount()</code> (users) karte hain.</p>
+<h2 id="3-every-table-column-frontend-field-where-it-appears">3. Every table: column → frontend field → where it appears</h2><p>Database names are <code>snake_case</code>; frontend names are <code>camelCase</code>. The conversion is done by <code>src/lib/mappers.js</code> (jobs, applications, companies) and by <code>serializeAccount()</code> in <code>src/lib/auth.js</code> (users).</p>
 <h3 id="3-1-accounts-users">3.1 <code>accounts</code> (users)</h3><div class="table-wrap"><table><thead><tr>
 <th>Column</th>
 <th>Frontend field</th>
-<th>Kahan set hota hai</th>
-<th>Kahan dikhta hai</th>
+<th>Set where</th>
+<th>Shown where</th>
 </tr>
 </thead><tbody><tr>
 <td><code>id</code> (uuid, PK)</td>
 <td><code>user.id</code></td>
-<td>Signup pe khud</td>
-<td>Har jagah owner check</td>
+<td>Automatically on sign-up</td>
+<td>Used for every ownership check</td>
 </tr>
 <tr>
 <td><code>email</code></td>
@@ -268,9 +268,9 @@ jobs (id)
 </tr>
 <tr>
 <td><code>password_hash</code></td>
-<td>— (kabhi bahar nahi jata)</td>
+<td>— (never sent out)</td>
 <td>Sign-up (scrypt hash)</td>
-<td>Sirf login check</td>
+<td>Only used to check the login</td>
 </tr>
 <tr>
 <td><code>full_name</code></td>
@@ -282,24 +282,24 @@ jobs (id)
 <td><code>role</code></td>
 <td><code>user.role</code></td>
 <td>Sign-up, Profile tab</td>
-<td>Dashboard: recruiter ya seeker view</td>
+<td>Dashboard: recruiter or seeker view</td>
 </tr>
 <tr>
 <td><code>is_active</code></td>
 <td>—</td>
 <td>—</td>
-<td>Login: false ho to block</td>
+<td>Login is blocked if false</td>
 </tr>
 <tr>
 <td><code>last_login_at</code></td>
 <td>—</td>
-<td>Har login pe</td>
+<td>Every login</td>
 <td>—</td>
 </tr>
 <tr>
 <td><code>created_at</code>, <code>updated_at</code></td>
 <td><code>createdAt</code>, <code>updatedAt</code></td>
-<td>Khud (trigger)</td>
+<td>Automatically (trigger)</td>
 <td>—</td>
 </tr>
 </tbody></table></div><h3 id="3-2-profiles-1-1-with-accounts">3.2 <code>profiles</code> (1:1 with accounts)</h3><div class="table-wrap"><table><thead><tr>
@@ -310,7 +310,7 @@ jobs (id)
 </thead><tbody><tr>
 <td><code>account_id</code> (PK + FK)</td>
 <td>—</td>
-<td>Signup pe trigger khud banata hai</td>
+<td>Created by a trigger on sign-up</td>
 </tr>
 <tr>
 <td><code>phone</code></td>
@@ -325,7 +325,7 @@ jobs (id)
 <tr>
 <td><code>skills</code> (text[] array)</td>
 <td><code>profile.skills</code></td>
-<td>Profile (comma se alag: &quot;React, SQL&quot;)</td>
+<td>Profile (comma separated: &quot;React, SQL&quot;)</td>
 </tr>
 <tr>
 <td><code>education</code></td>
@@ -345,7 +345,7 @@ jobs (id)
 <tr>
 <td><code>experience</code>, <code>website</code>, <code>linkedin</code>, <code>github</code>, <code>avatar_url</code></td>
 <td><code>profile.experience</code> ... <code>profile.avatar</code></td>
-<td>Future use</td>
+<td>For future use</td>
 </tr>
 </tbody></table></div><h3 id="3-3-user-settings-1-1-with-accounts">3.3 <code>user_settings</code> (1:1 with accounts)</h3><div class="table-wrap"><table><thead><tr>
 <th>Column</th>
@@ -376,7 +376,7 @@ jobs (id)
 <th>Column</th>
 <th>Frontend field</th>
 <th>Post Job form field</th>
-<th>Kahan dikhta hai</th>
+<th>Shown where</th>
 </tr>
 </thead><tbody><tr>
 <td><code>id</code></td>
@@ -387,13 +387,13 @@ jobs (id)
 <tr>
 <td><code>recruiter_id</code> (FK)</td>
 <td><code>recruiterId</code>, <code>recruiter.name</code></td>
-<td>Logged-in user khud</td>
+<td>The logged-in user, automatically</td>
 <td>Job detail</td>
 </tr>
 <tr>
 <td><code>company_id</code> (FK)</td>
 <td><code>companyId</code></td>
-<td>Company naam se khud milta / banta hai</td>
+<td>Found or created from the company name</td>
 <td>Companies page grouping</td>
 </tr>
 <tr>
@@ -441,7 +441,7 @@ jobs (id)
 <tr>
 <td><code>required_skills</code> (text[])</td>
 <td><code>requiredSkills</code></td>
-<td>Required Skills (comma)</td>
+<td>Required Skills (comma separated)</td>
 <td>Skill chips</td>
 </tr>
 <tr>
@@ -478,7 +478,7 @@ jobs (id)
 <td><code>contact_email</code></td>
 <td><code>contactEmail</code></td>
 <td>Contact Email</td>
-<td>Apply email isi pe jati hai</td>
+<td>The application email goes here</td>
 </tr>
 <tr>
 <td><code>apply_link</code></td>
@@ -490,28 +490,28 @@ jobs (id)
 <td><code>status</code></td>
 <td><code>status</code></td>
 <td>— (default <code>active</code>)</td>
-<td>Sirf <code>active</code> jobs list mein</td>
+<td>Only <code>active</code> jobs are listed</td>
 </tr>
 <tr>
 <td><code>views</code></td>
 <td><code>views</code></td>
 <td>—</td>
-<td>Job detail kholne pe +1</td>
+<td>+1 each time the job detail opens</td>
 </tr>
 </tbody></table></div><h3 id="3-5-applications">3.5 <code>applications</code></h3><div class="table-wrap"><table><thead><tr>
 <th>Column</th>
 <th>Frontend field</th>
-<th>Kahan se aata hai</th>
+<th>Comes from</th>
 </tr>
 </thead><tbody><tr>
 <td><code>job_id</code> (FK → jobs)</td>
 <td><code>jobId</code></td>
-<td>Job detail page ka job</td>
+<td>The job on the job detail page</td>
 </tr>
 <tr>
 <td><code>applicant_id</code> (FK → accounts)</td>
 <td><code>applicantId</code></td>
-<td>Logged-in user</td>
+<td>The logged-in user</td>
 </tr>
 <tr>
 <td><code>cover_letter</code></td>
@@ -521,34 +521,34 @@ jobs (id)
 <tr>
 <td><code>resume</code></td>
 <td><code>resume</code></td>
-<td>Apply form → resume file ka naam</td>
+<td>Apply form → resume file name</td>
 </tr>
 <tr>
 <td><code>status</code></td>
 <td><code>status</code></td>
-<td>Default <code>pending</code>; recruiter dropdown se badalta hai</td>
+<td>Defaults to <code>pending</code>; the recruiter changes it with a dropdown</td>
 </tr>
 <tr>
 <td><code>name</code>, <code>email</code>, <code>phone</code>, <code>skills</code>, <code>bio</code>, <code>education</code></td>
-<td>same naam</td>
+<td>same names</td>
 <td>Apply form fields (<code>customFields</code>)</td>
 </tr>
 <tr>
 <td><code>job_title</code>, <code>company_name</code>, <code>location</code></td>
 <td>same (camelCase)</td>
-<td>Apply ke waqt job se copy (snapshot)</td>
+<td>Copied from the job when applying (snapshot)</td>
 </tr>
 <tr>
 <td><code>applicant_score</code></td>
 <td><code>applicantScore</code></td>
-<td>— (labs ke liye)</td>
+<td>— (used by the labs)</td>
 </tr>
 <tr>
 <td><code>applied_at</code></td>
 <td><code>appliedAt</code></td>
-<td>Khud: &quot;Applied 11/22/2026&quot;</td>
+<td>Automatic: &quot;Applied 11/22/2026&quot;</td>
 </tr>
-</tbody></table></div><p><strong>Snapshot kyun?</strong> Agar recruiter baad mein job ka title badal de, purani application mein wahi title rahe jis pe apply kiya tha.</p>
+</tbody></table></div><p><strong>Why a snapshot?</strong> If the recruiter later renames the job, the old application keeps the title the seeker actually applied to.</p>
 <h3 id="3-6-saved-jobs-companies-sessions">3.6 <code>saved_jobs</code>, <code>companies</code>, <code>sessions</code></h3><div class="table-wrap"><table><thead><tr>
 <th>Table</th>
 <th>Columns</th>
@@ -557,7 +557,7 @@ jobs (id)
 </thead><tbody><tr>
 <td><code>saved_jobs</code></td>
 <td><code>account_id</code>, <code>job_id</code>, <code>created_at</code></td>
-<td>Jobs page ka bookmark button</td>
+<td>Bookmark button on the jobs page</td>
 </tr>
 <tr>
 <td><code>companies</code></td>
@@ -567,21 +567,21 @@ jobs (id)
 <tr>
 <td><code>sessions</code></td>
 <td><code>account_id</code>, <code>token_hash</code>, <code>expires_at</code>, <code>revoked_at</code>, <code>user_agent</code>, <code>ip_address</code></td>
-<td>Koi UI nahi; login yaad rakhne ke liye</td>
+<td>No UI; keeps the user logged in</td>
 </tr>
 </tbody></table></div><hr>
-<h2 id="4-har-feature-kaunsi-file-kaunsi-table">4. Har feature: kaunsi file → kaunsi table</h2><p>Format: <strong>Page file</strong> → <code>fetch</code> → <strong>API file</strong> → <strong>lib</strong> → <strong>SQL jaisa kaam</strong></p>
+<h2 id="4-every-feature-which-file-which-table">4. Every feature: which file → which table</h2><p>Format: <strong>Page file</strong> → <code>fetch</code> → <strong>API file</strong> → <strong>lib</strong> → <strong>what it does in SQL terms</strong></p>
 <h3 id="4-1-sign-up">4.1 Sign up</h3><ol>
-<li><code>src/app/sign-up/page.js</code> form → <code>src/context/AuthContext.js</code> <code>signup()</code></li>
+<li><code>src/app/sign-up/page.js</code> form → <code>signup()</code> in <code>src/context/AuthContext.js</code></li>
 <li><code>POST /api/auth/signup</code> → <code>src/app/api/auth/signup/route.js</code></li>
-<li><code>src/lib/password.js</code> password ko hash karta hai</li>
-<li><code>SELECT id FROM accounts WHERE email = ?</code> (pehle se hai?)</li>
+<li><code>src/lib/password.js</code> hashes the password</li>
+<li><code>SELECT id FROM accounts WHERE email = ?</code> (does it already exist?)</li>
 <li><code>INSERT INTO accounts (email, password_hash, full_name, role)</code></li>
-<li><strong>Triggers</strong> khud chalte hain: <code>INSERT INTO profiles</code> aur <code>INSERT INTO user_settings</code></li>
-<li><code>src/lib/auth.js</code> <code>createSession()</code> → <code>INSERT INTO sessions</code> + cookie</li>
+<li><strong>Triggers</strong> run automatically: <code>INSERT INTO profiles</code> and <code>INSERT INTO user_settings</code></li>
+<li><code>createSession()</code> in <code>src/lib/auth.js</code> → <code>INSERT INTO sessions</code> + cookie</li>
 </ol>
-<h3 id="4-2-login-logout-kaun-logged-in-hai">4.2 Login / logout / &quot;kaun logged in hai&quot;</h3><div class="table-wrap"><table><thead><tr>
-<th>Kaam</th>
+<h3 id="4-2-login-logout-who-is-logged-in">4.2 Login / logout / &quot;who is logged in&quot;</h3><div class="table-wrap"><table><thead><tr>
+<th>Action</th>
 <th>API file</th>
 <th>Database</th>
 </tr>
@@ -591,9 +591,9 @@ jobs (id)
 <td><code>SELECT password_hash FROM accounts WHERE email=?</code> → <code>INSERT INTO sessions</code></td>
 </tr>
 <tr>
-<td>Har page pe user</td>
+<td>Current user on every page</td>
 <td><code>api/auth/me/route.js</code> → <code>lib/auth.js</code></td>
-<td><code>sessions</code> (token_hash match) → <code>accounts</code> JOIN <code>profiles</code>, <code>user_settings</code></td>
+<td><code>sessions</code> (match token_hash) → <code>accounts</code> JOIN <code>profiles</code>, <code>user_settings</code></td>
 </tr>
 <tr>
 <td>Logout</td>
@@ -601,66 +601,66 @@ jobs (id)
 <td><code>UPDATE sessions SET revoked_at = now()</code></td>
 </tr>
 <tr>
-<td>Protected page</td>
+<td>Protected pages</td>
 <td><code>src/middleware.js</code></td>
-<td>Database nahi; sirf cookie ka JWT check</td>
+<td>No database; only checks the JWT in the cookie</td>
 </tr>
-</tbody></table></div><h3 id="4-3-jobs-dekhna-search">4.3 Jobs dekhna / search</h3><ol>
+</tbody></table></div><h3 id="4-3-browse-search-jobs">4.3 Browse / search jobs</h3><ol>
 <li><code>src/app/jobs/page.js</code> → <code>fetch(&#39;/api/jobs?search=React&amp;location=Lahore&amp;page=1&#39;)</code></li>
-<li><code>src/app/api/jobs/route.js</code> <code>GET</code>:
+<li><code>GET</code> in <code>src/app/api/jobs/route.js</code>:
 <code>SELECT ... FROM jobs JOIN accounts ON accounts.id = jobs.recruiter_id WHERE status=&#39;active&#39; AND (job_title ILIKE &#39;%React%&#39; OR ...) AND location ILIKE &#39;%Lahore%&#39; ORDER BY created_at DESC LIMIT 10</code></li>
-<li><code>lib/mappers.js</code> <code>jobRowToApi()</code> → <code>job_title</code> ko <code>jobTitle</code> banata hai</li>
-<li><code>src/components/JobCard.js</code> card dikhata hai</li>
+<li><code>jobRowToApi()</code> in <code>lib/mappers.js</code> → turns <code>job_title</code> into <code>jobTitle</code></li>
+<li><code>src/components/JobCard.js</code> shows the card</li>
 </ol>
 <h3 id="4-4-job-detail">4.4 Job detail</h3><p><code>src/app/jobs/[id]/page.js</code> → <code>GET /api/jobs/&lt;id&gt;</code> → <code>src/app/api/jobs/[id]/route.js</code> → <code>SELECT ... FROM jobs WHERE id=?</code> + <code>increment_job_views()</code> (SQL function, <code>views + 1</code>)</p>
-<h3 id="4-5-job-post-karna-recruiter">4.5 Job post karna (recruiter)</h3><ol>
+<h3 id="4-5-post-a-job-recruiter">4.5 Post a job (recruiter)</h3><ol>
 <li><code>src/components/JobPostModal.js</code> form → <code>src/app/dashboard/page.js</code> → <code>POST /api/jobs</code></li>
-<li><code>src/app/api/jobs/route.js</code> <code>POST</code>:<ul>
+<li><code>POST</code> in <code>src/app/api/jobs/route.js</code>:<ul>
 <li>Login check (<code>lib/auth.js</code>)</li>
-<li>Company: <code>SELECT id FROM companies WHERE slug=&#39;workoura-tech&#39;</code> → na mile to <code>INSERT INTO companies</code></li>
-<li><code>lib/mappers.js</code> <code>jobApiToRow()</code> → form fields ko columns mein badalta hai</li>
+<li>Company: <code>SELECT id FROM companies WHERE slug=&#39;workoura-tech&#39;</code> → if not found, <code>INSERT INTO companies</code></li>
+<li><code>jobApiToRow()</code> in <code>lib/mappers.js</code> → turns form fields into columns</li>
 <li><code>INSERT INTO jobs (recruiter_id, company_id, job_title, ...)</code></li>
 </ul>
 </li>
-<li>Edit: <code>PUT /api/jobs/&lt;id&gt;</code> → <code>UPDATE jobs</code>. Delete: <code>DELETE /api/jobs/&lt;id&gt;</code> → <code>DELETE FROM jobs</code> (cascade: applications + saved_jobs bhi)</li>
+<li>Edit: <code>PUT /api/jobs/&lt;id&gt;</code> → <code>UPDATE jobs</code>. Delete: <code>DELETE /api/jobs/&lt;id&gt;</code> → <code>DELETE FROM jobs</code> (cascade also removes its applications and saved_jobs)</li>
 </ol>
-<h3 id="4-6-apply-karna-job-seeker">4.6 Apply karna (job seeker)</h3><ol>
+<h3 id="4-6-apply-job-seeker">4.6 Apply (job seeker)</h3><ol>
 <li><code>src/app/jobs/[id]/page.js</code> Apply form → <code>POST /api/applications</code> with <code>{ jobId, coverLetter, resume, customFields: { name, email, phone, skills, bio, education } }</code></li>
-<li><code>src/app/api/applications/route.js</code> → <code>src/lib/applications.js</code> <code>createApplication()</code>:<ul>
-<li><code>SELECT status, recruiter_id FROM jobs WHERE id=?</code> (active? apni job to nahi?)</li>
+<li><code>src/app/api/applications/route.js</code> → <code>createApplication()</code> in <code>src/lib/applications.js</code>:<ul>
+<li><code>SELECT status, recruiter_id FROM jobs WHERE id=?</code> (active? not your own job?)</li>
 <li><code>INSERT INTO applications (job_id, applicant_id, cover_letter, status, name, email, ..., job_title, company_name, location)</code></li>
-<li>Do baar apply → unique index error <code>23505</code> → &quot;pehle hi apply kar chuke hain&quot;</li>
+<li>Applying twice → unique index error <code>23505</code> → &quot;You have already applied to this job&quot;</li>
 </ul>
 </li>
-<li>Phir <code>POST /api/apply</code> → recruiter ko email (database nahi)</li>
+<li>Then <code>POST /api/apply</code> → email to the recruiter (no database)</li>
 </ol>
-<h3 id="4-7-applications-dekhna-status-badalna">4.7 Applications dekhna + status badalna</h3><div class="table-wrap"><table><thead><tr>
-<th>Kaam</th>
+<h3 id="4-7-view-applications-change-status">4.7 View applications + change status</h3><div class="table-wrap"><table><thead><tr>
+<th>Action</th>
 <th>File</th>
 <th>Database</th>
 </tr>
 </thead><tbody><tr>
-<td>Seeker: meri applications</td>
-<td><code>api/applications/route.js</code> <code>GET</code></td>
+<td>Seeker: my applications</td>
+<td><code>GET</code> in <code>api/applications/route.js</code></td>
 <td><code>SELECT ... FROM applications WHERE applicant_id = me</code></td>
 </tr>
 <tr>
-<td>Recruiter: meri jobs ki applications</td>
+<td>Recruiter: applications to my jobs</td>
 <td>same</td>
 <td><code>SELECT id FROM jobs WHERE recruiter_id = me</code> → <code>... WHERE job_id IN (...)</code></td>
 </tr>
 <tr>
-<td>Ek job ki applications</td>
+<td>Applications for one job</td>
 <td><code>GET /api/applications?jobId=</code></td>
-<td><code>WHERE job_id = ?</code> (sirf us job ka recruiter)</td>
+<td><code>WHERE job_id = ?</code> (only that job&#39;s recruiter)</td>
 </tr>
 <tr>
 <td>Status dropdown</td>
-<td><code>api/applications/[id]/route.js</code> <code>PATCH</code></td>
-<td><code>jobs.recruiter_id</code> check → <code>UPDATE applications SET status=?</code></td>
+<td><code>PATCH</code> in <code>api/applications/[id]/route.js</code></td>
+<td>check <code>jobs.recruiter_id</code> → <code>UPDATE applications SET status=?</code></td>
 </tr>
-</tbody></table></div><p>Har application ke saath JOIN aata hai (<code>lib/applications.js</code> → <code>APPLICATION_SELECT</code>):
-<code>applications.job_id → jobs</code> (title, salary) aur <code>applications.applicant_id → accounts → profiles</code> (naam, skills).</p>
+</tbody></table></div><p>Each application comes with joined data (<code>APPLICATION_SELECT</code> in <code>lib/applications.js</code>):
+<code>applications.job_id → jobs</code> (title, salary) and <code>applications.applicant_id → accounts → profiles</code> (name, skills).</p>
 <h3 id="4-8-dashboard-stats-my-jobs">4.8 Dashboard stats / My Jobs</h3><p><code>src/app/dashboard/page.js</code> → <code>GET /api/dashboard</code> → <code>src/app/api/dashboard/route.js</code> → <code>SELECT *, (SELECT count(*) FROM applications WHERE job_id = jobs.id) FROM jobs WHERE recruiter_id = me</code></p>
 <h3 id="4-9-profile-settings">4.9 Profile + settings</h3><p><code>src/app/dashboard/page.js</code> (Profile tab) → <code>GET/PUT /api/users</code> → <code>src/app/api/users/route.js</code> → <code>src/lib/accounts.js</code>:</p>
 <ul>
@@ -668,65 +668,65 @@ jobs (id)
 <li><code>UPSERT profiles (phone, bio, skills, location, education ...)</code></li>
 <li><code>UPSERT user_settings (email_notifications, job_alerts ...)</code></li>
 </ul>
-<h3 id="4-10-save-job">4.10 Save job</h3><p><code>src/app/jobs/page.js</code> bookmark → <code>POST</code> / <code>DELETE /api/jobs/&lt;id&gt;/save</code> → <code>src/app/api/jobs/[id]/save/route.js</code> → <code>INSERT ... ON CONFLICT (account_id, job_id) DO UPDATE</code> / <code>DELETE FROM saved_jobs WHERE account_id=? AND job_id=?</code></p>
-<h3 id="4-11-companies-page">4.11 Companies page</h3><p><code>src/app/companies/page.js</code> → <code>GET /api/companies</code> → <code>src/app/api/companies/route.js</code> → <code>SELECT * FROM companies</code> + <code>SELECT * FROM jobs WHERE status=&#39;active&#39;</code> → jobs ko <code>jobs.company_id = companies.id</code> se company ke neeche jodta hai</p>
+<h3 id="4-10-save-a-job">4.10 Save a job</h3><p><code>src/app/jobs/page.js</code> bookmark → <code>POST</code> / <code>DELETE /api/jobs/&lt;id&gt;/save</code> → <code>src/app/api/jobs/[id]/save/route.js</code> → <code>INSERT ... ON CONFLICT (account_id, job_id) DO UPDATE</code> / <code>DELETE FROM saved_jobs WHERE account_id=? AND job_id=?</code></p>
+<h3 id="4-11-companies-page">4.11 Companies page</h3><p><code>src/app/companies/page.js</code> → <code>GET /api/companies</code> → <code>src/app/api/companies/route.js</code> → <code>SELECT * FROM companies</code> + <code>SELECT * FROM jobs WHERE status=&#39;active&#39;</code> → groups jobs under their company with <code>jobs.company_id = companies.id</code></p>
 <hr>
-<h2 id="5-database-ke-andar-automatic-cheezein-sql-schema-sql">5. Database ke andar automatic cheezein (<code>sql/schema.sql</code>)</h2><div class="table-wrap"><table><thead><tr>
-<th>Naam</th>
+<h2 id="5-things-that-run-automatically-inside-the-database-sql-schema-sql">5. Things that run automatically inside the database (<code>sql/schema.sql</code>)</h2><div class="table-wrap"><table><thead><tr>
+<th>Name</th>
 <th>Type</th>
-<th>Kab chalta hai</th>
-<th>Kya karta hai</th>
+<th>When it runs</th>
+<th>What it does</th>
 </tr>
 </thead><tbody><tr>
 <td><code>set_updated_at()</code></td>
 <td>function + 6 triggers</td>
-<td>Har UPDATE pe (accounts, profiles, user_settings, companies, jobs, applications)</td>
+<td>Every UPDATE (accounts, profiles, user_settings, companies, jobs, applications)</td>
 <td><code>updated_at = now()</code></td>
 </tr>
 <tr>
 <td><code>create_profile_for_account()</code></td>
 <td>trigger</td>
-<td><code>INSERT INTO accounts</code> ke baad</td>
-<td>Khali <code>profiles</code> row banata hai</td>
+<td>After <code>INSERT INTO accounts</code></td>
+<td>Creates an empty <code>profiles</code> row</td>
 </tr>
 <tr>
 <td><code>create_settings_for_account()</code></td>
 <td>trigger</td>
-<td><code>INSERT INTO accounts</code> ke baad</td>
-<td>Default <code>user_settings</code> row</td>
+<td>After <code>INSERT INTO accounts</code></td>
+<td>Creates a default <code>user_settings</code> row</td>
 </tr>
 <tr>
 <td><code>increment_job_views(p_job_id)</code></td>
 <td>function</td>
-<td>Job detail page khulne pe (API se <code>rpc</code>)</td>
+<td>When the job detail page opens (API <code>rpc</code>)</td>
 <td><code>jobs.views + 1</code></td>
 </tr>
 <tr>
 <td><code>purge_expired_sessions()</code></td>
 <td>function</td>
 <td>Manually</td>
-<td>Expired sessions delete</td>
+<td>Deletes expired sessions</td>
 </tr>
 <tr>
 <td><code>job_application_counts</code></td>
 <td>view</td>
 <td>—</td>
-<td>Har job ki application count (sirf server)</td>
+<td>Application count per job (server only)</td>
 </tr>
 <tr>
 <td>RLS policies</td>
 <td>security</td>
-<td>Public key se read</td>
-<td>Sirf <code>active</code> jobs aur companies public; baaki sab band</td>
+<td>Reads with the public key</td>
+<td>Only <code>active</code> jobs and companies are public; everything else is closed</td>
 </tr>
 </tbody></table></div><hr>
-<h2 id="6-saari-files-ek-nazar-mein">6. Saari files ek nazar mein</h2><div class="table-wrap"><table><thead><tr>
+<h2 id="6-all-files-at-a-glance">6. All files at a glance</h2><div class="table-wrap"><table><thead><tr>
 <th>File</th>
-<th>Database se kya rishta</th>
+<th>Relationship to the database</th>
 </tr>
 </thead><tbody><tr>
 <td><code>src/lib/supabase.js</code></td>
-<td><strong>Connection</strong> banata hai (URL + key)</td>
+<td>Creates the <strong>connection</strong> (URL + key)</td>
 </tr>
 <tr>
 <td><code>src/lib/mappers.js</code></td>
@@ -742,11 +742,11 @@ jobs (id)
 </tr>
 <tr>
 <td><code>src/lib/applications.js</code></td>
-<td>Apply: <code>jobs</code> check, <code>applications</code> insert, JOIN list</td>
+<td>Apply: check <code>jobs</code>, insert <code>applications</code>, joined list</td>
 </tr>
 <tr>
 <td><code>src/lib/password.js</code>, <code>jwt.js</code></td>
-<td>Database nahi; hashing aur token</td>
+<td>No database; hashing and tokens</td>
 </tr>
 <tr>
 <td><code>src/app/api/auth/*</code></td>
@@ -754,11 +754,11 @@ jobs (id)
 </tr>
 <tr>
 <td><code>src/app/api/jobs/route.js</code></td>
-<td><code>jobs</code> (list, create), <code>companies</code> (find/create)</td>
+<td><code>jobs</code> (list, create), <code>companies</code> (find / create)</td>
 </tr>
 <tr>
 <td><code>src/app/api/jobs/[id]/route.js</code></td>
-<td>Ek <code>jobs</code> row: read, update, delete, views</td>
+<td>One <code>jobs</code> row: read, update, delete, views</td>
 </tr>
 <tr>
 <td><code>src/app/api/jobs/[id]/save/route.js</code></td>
@@ -770,7 +770,7 @@ jobs (id)
 </tr>
 <tr>
 <td><code>src/app/api/dashboard/route.js</code></td>
-<td>Recruiter ki <code>jobs</code> + application count</td>
+<td>A recruiter&#39;s <code>jobs</code> + application counts</td>
 </tr>
 <tr>
 <td><code>src/app/api/companies/route.js</code></td>
@@ -782,30 +782,30 @@ jobs (id)
 </tr>
 <tr>
 <td><code>src/app/api/apply/route.js</code></td>
-<td>Database <strong>nahi</strong>; sirf email</td>
+<td><strong>No</strong> database; email only</td>
 </tr>
 <tr>
 <td><code>src/context/AuthContext.js</code></td>
-<td>Auth APIs call karta hai; user poori site ko deta hai</td>
+<td>Calls the auth APIs; gives the user to the whole site</td>
 </tr>
 <tr>
 <td><code>src/middleware.js</code></td>
-<td>Database <strong>nahi</strong>; cookie check karke redirect</td>
+<td><strong>No</strong> database; checks the cookie and redirects</td>
 </tr>
 <tr>
 <td><code>sql/schema.sql</code></td>
-<td>Saari tables, FKs, triggers, RLS</td>
+<td>All tables, FKs, triggers, RLS</td>
 </tr>
 </tbody></table></div><hr>
-<h2 id="7-viva-mein-poochne-wale-sawal">7. Viva mein poochne wale sawal</h2><ul>
-<li><strong>Frontend database se kaise connect hota hai?</strong> Seedha nahi. Page <code>fetch(&#39;/api/...&#39;)</code> karta hai, API route <code>getSupabaseAdmin()</code> (<code>src/lib/supabase.js</code>) se query chalata hai.</li>
-<li><strong><code>jobTitle</code> aur <code>job_title</code> mein farq?</strong> Same cheez. DB <code>snake_case</code>, JavaScript <code>camelCase</code>. <code>src/lib/mappers.js</code> badalta hai.</li>
-<li><strong>Recruiter aur job kaise jude hain?</strong> <code>jobs.recruiter_id</code> FK → <code>accounts.id</code> (1:N).</li>
-<li><strong>Kisne kis job pe apply kiya, kaise pata chalta hai?</strong> <code>applications</code> table: <code>job_id</code> → <code>jobs</code>, <code>applicant_id</code> → <code>accounts</code>. M:N relationship.</li>
-<li><strong>Signup pe profile kaun banata hai?</strong> Database trigger <code>create_profile_for_account()</code>, code nahi.</li>
-<li><strong>Job delete ho to applications ka kya hota hai?</strong> <code>ON DELETE CASCADE</code>, wo bhi delete.</li>
-<li><strong>Do baar apply kyun nahi hota?</strong> <code>(job_id, applicant_id)</code> pe unique index.</li>
-<li><strong>Recruiter doosre ki application ka status kyun nahi badal sakta?</strong> API pehle <code>jobs.recruiter_id</code> ko logged-in user se match karta hai, warna 403.</li>
+<h2 id="7-viva-questions">7. Viva questions</h2><ul>
+<li><strong>How does the frontend connect to the database?</strong> Not directly. A page calls <code>fetch(&#39;/api/...&#39;)</code>, and the API route runs the query through <code>getSupabaseAdmin()</code> (<code>src/lib/supabase.js</code>).</li>
+<li><strong>What is the difference between <code>jobTitle</code> and <code>job_title</code>?</strong> They are the same value. The DB uses <code>snake_case</code>, JavaScript uses <code>camelCase</code>; <code>src/lib/mappers.js</code> converts between them.</li>
+<li><strong>How are recruiters and jobs connected?</strong> <code>jobs.recruiter_id</code> is an FK → <code>accounts.id</code> (1:N).</li>
+<li><strong>How do we know who applied to which job?</strong> The <code>applications</code> table: <code>job_id</code> → <code>jobs</code>, <code>applicant_id</code> → <code>accounts</code>. It is an M:N relationship.</li>
+<li><strong>Who creates the profile on sign-up?</strong> The database trigger <code>create_profile_for_account()</code>, not the app code.</li>
+<li><strong>What happens to applications when a job is deleted?</strong> <code>ON DELETE CASCADE</code> deletes them too.</li>
+<li><strong>Why can&#39;t someone apply twice?</strong> The unique index on <code>(job_id, applicant_id)</code>.</li>
+<li><strong>Why can&#39;t a recruiter change the status of another recruiter&#39;s application?</strong> The API first checks that <code>jobs.recruiter_id</code> is the logged-in user; otherwise it returns 403.</li>
 </ul>
 </main>
 </div>
