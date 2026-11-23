@@ -1,0 +1,96 @@
+-- ============================================================
+-- lab06_er_model.sql  --  LAB 06: CONSTRUCTING ER DIAGRAMS AND ER SCHEMAS
+--
+-- Topics covered:
+--   * ER model components: entity, entity set, strong / weak entity
+--   * Attribute types: key (primary key), composite, multivalued,
+--     derived, foreign key
+--   * Relationships and their cardinality
+--   * The schema of the database (SSMS "Database Diagram" /
+--     sys.tables equivalent)
+--
+-- Depends on: lab00_demo_data.sql
+-- SELECT query only, no data is changed.
+-- ============================================================
+
+
+-- ============================================================
+-- 1) ER DIAGRAM OF THE JOB BOARD (text form)
+--
+--   [ ]   = strong entity          [[ ]] = weak entity
+--   < >   = relationship           ( )   = attribute
+--   (_x_) = key attribute          {x}   = multivalued attribute
+--   /x/   = derived attribute
+--
+--                (_id_) (email) (full_name) (role)
+--                               |
+--      +-------1-----------[ ACCOUNT ]-----------1-------+
+--      |                     |       |                   |
+--    <has>                <posts>  <applies_to>        <has>
+--      |                     |1      |M                  |
+--      1                     |       |                   1
+--  [[ PROFILE ]]             N       N           [[ USER_SETTINGS ]]
+--  {skills}                  |       |
+--                       [   JOB   ]--+
+--   (_id_) (job_title) {required_skills} /total_applications/
+--                          N |
+--                      <offers>
+--                          1 |
+--                     [ COMPANY ]  (_id_) (name) (location)
+--
+--   ACCOUNT  M --<saves>-- N  JOB      (saved_jobs table)
+--
+--
+-- 2) ENTITIES
+--   Entity     : an object with its own existence, e.g. one job, one account.
+--   Entity set : all entities of one type, e.g. all rows of the jobs table.
+--   Strong entity (has its own primary key, single rectangle):
+--     accounts, companies, jobs
+--   Weak entity (cannot be identified without its owner, double rectangle):
+--     profiles, user_settings -> their primary key is account_id,
+--     which is the owner's key.
+--
+--
+-- 3) ATTRIBUTES AND THEIR TYPES
+--   Entity        Attribute          Data type     Attribute type
+--   ACCOUNT       id                 uuid          Primary Key, Key Attribute
+--                 full_name          text          Composite (first name + last name)
+--                 email              text          Simple
+--   PROFILE       account_id         uuid          Primary Key, Foreign Key
+--                 skills             text[]        Multivalued
+--   COMPANY       id                 uuid          Primary Key, Key Attribute
+--                 location           text          Composite (city + country)
+--   JOB           id                 uuid          Primary Key, Key Attribute
+--                 recruiter_id       uuid          Foreign Key -> accounts
+--                 company_id         uuid          Foreign Key -> companies
+--                 required_skills    text[]        Multivalued
+--                 total_applications (view)        Derived (counted from applications)
+--   APPLICATION   id                 uuid          Primary Key, Key Attribute
+--                 job_id             uuid          Foreign Key -> jobs
+--                 applicant_id       uuid          Foreign Key -> accounts
+--   SAVED_JOBS    (account_id, job_id)             Primary Key (composite), Foreign Keys
+--
+--
+-- 4) RELATIONSHIPS
+--   Relationship              Entities involved          Cardinality
+--   Account has Profile       ACCOUNT, PROFILE           One-to-One
+--   Account has Settings      ACCOUNT, USER_SETTINGS     One-to-One
+--   Recruiter posts Jobs      ACCOUNT, JOB               One-to-Many
+--   Company offers Jobs       COMPANY, JOB               One-to-Many
+--   Account owns Companies    ACCOUNT, COMPANY           One-to-Many
+--   Seeker applies to Jobs    ACCOUNT, JOB               Many-to-Many (applications)
+--   Seeker saves Jobs         ACCOUNT, JOB               Many-to-Many (saved_jobs)
+--
+--
+-- 5) ER SCHEMA
+--   The tables for this ER diagram are created in sql/01 ... sql/08.
+--   Supabase shows the diagram under Database -> Schema Visualizer
+--   (same as SSMS -> Database Diagrams -> New Database Diagram).
+-- ============================================================
+
+
+-- Show all tables in the current database
+-- SQL Server: SELECT * FROM sys.tables;
+select *
+  from information_schema.tables
+ where table_schema = 'public';

@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WorkOura Group Notes</title>
+<style>
+:root{
+  --bg:#f7f8fa; --surface:#ffffff; --text:#1b1f24; --muted:#5b6470; --border:#e3e6ea;
+  --accent:#2563eb; --accent-soft:#e8efff; --code-bg:#f1f3f5; --th:#f3f5f8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1216; --surface:#171b21; --text:#e6e9ed; --muted:#9aa3ae; --border:#2a3038;
+    --accent:#6ea0ff; --accent-soft:#1c2a44; --code-bg:#20252c; --th:#1d2228;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1216; --surface:#171b21; --text:#e6e9ed; --muted:#9aa3ae; --border:#2a3038;
+  --accent:#6ea0ff; --accent-soft:#1c2a44; --code-bg:#20252c; --th:#1d2228;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 "Segoe UI",system-ui,-apple-system,Arial,sans-serif}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:32px;max-width:1150px;margin:0 auto;padding:32px 24px}
+nav{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto}
+nav .label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px 10px}
+nav a{display:block;padding:6px 10px;border-radius:6px;color:var(--muted);text-decoration:none;font-size:14px}
+nav a:hover,nav a.active{background:var(--accent-soft);color:var(--accent)}
+main{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px 44px;min-width:0;overflow-wrap:anywhere}
+h1{font-size:30px;line-height:1.2;margin:0 0 12px}
+h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--border);scroll-margin-top:20px}
+h2:first-of-type{border-top:0}
+h3{font-size:17px;margin:24px 0 8px}
+a{color:var(--accent)}
+hr{display:none}
+code{background:var(--code-bg);padding:1px 6px;border-radius:4px;font-size:.88em;font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:8px;overflow-x:auto;line-height:1.45}
+pre code{padding:0;background:none;font-size:13.5px}
+blockquote{margin:16px 0;padding:10px 16px;border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0}
+blockquote p{margin:0}
+.table-wrap{overflow-x:auto;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--th);font-weight:600}
+ul,ol{padding-left:22px}
+li{margin:4px 0}
+.theme-btn{position:fixed;right:16px;bottom:16px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr;padding:16px;gap:16px}
+  nav{position:static;max-height:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
+  main{padding:22px 18px}
+  h1{font-size:24px}
+}
+@media print{
+  nav,.theme-btn{display:none}
+  .layout{display:block;padding:0}
+  main{border:0;padding:0}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav><p class="label">Contents</p><a href="#1-project-kya-hai-1-minute-version">1. Project kya hai? (1 minute version)</a><a href="#2-website-try-kaise-karein">2. Website try kaise karein</a><a href="#3-technology-kaunsi-cheez-kis-liye">3. Technology (kaunsi cheez kis liye)</a><a href="#4-system-kaise-kaam-karta-hai">4. System kaise kaam karta hai</a><a href="#5-folder-structure-sirf-kaam-ki-files">5. Folder structure (sirf kaam ki files)</a><a href="#6-database-tables">6. Database tables</a><a href="#7-login-system-kaise-kaam-karta-hai">7. Login system kaise kaam karta hai</a><a href="#8-security-viva-mein-zaroor-poochte-hain">8. Security (viva mein zaroor poochte hain)</a><a href="#9-project-apne-computer-pe-kaise-chalayein">9. Project apne computer pe kaise chalayein</a><a href="#10-deployment">10. Deployment</a><a href="#11-abhi-kya-kaam-nahi-karta-honest-list">11. Abhi kya kaam nahi karta (honest list)</a><a href="#12-viva-ke-common-sawal">12. Viva ke common sawal</a></nav>
+  <main><h1 id="workoura-job-board-group-notes">WorkOura Job Board: Group Notes</h1><ul>
+<li><strong>Live website:</strong> <a href="https://work-oura-jobs.netlify.app">https://work-oura-jobs.netlify.app</a></li>
+<li><strong>Code:</strong> <a href="https://github.com/ALIRAZA4278/work-oura">https://github.com/ALIRAZA4278/work-oura</a></li>
+<li><strong>Database:</strong> Supabase (PostgreSQL)</li>
+<li><strong>Demo login:</strong> <code>aliadmin@gmail.com</code> / <code>AliAdmin@123</code> (detail section 2 mein)</li>
+</ul>
+<p>Ye notes is liye hain taake group ka har member samajh sake ke project kya hai, kaise kaam karta hai, aur viva mein kya bolna hai. SQL / DBMS labs ki detail <code>sql/VIVA_NOTES.md</code> mein hai.</p>
+<hr>
+<h2 id="1-project-kya-hai-1-minute-version">1. Project kya hai? (1 minute version)</h2><p>Ek <strong>job board website</strong>, jaise Rozee.pk ya Indeed. Do tarah ke users hain:</p>
+<div class="table-wrap"><table><thead><tr>
+<th>User</th>
+<th>Kya kar sakta hai</th>
+</tr>
+</thead><tbody><tr>
+<td><strong>Job Seeker</strong> (naukri dhoondne wala)</td>
+<td>Jobs dekhna, search/filter karna, job save karna, apply karna, apni applications ka status dekhna</td>
+</tr>
+<tr>
+<td><strong>Recruiter</strong> (company wala)</td>
+<td>Job post karna, apni jobs manage karna, applications dekhna, status badalna (pending → reviewing → interview → hired / rejected)</td>
+</tr>
+</tbody></table></div><p>Sab data (users, jobs, applications) ek <strong>PostgreSQL database</strong> mein save hota hai jo Supabase pe chal raha hai.</p>
+<hr>
+<h2 id="2-website-try-kaise-karein">2. Website try kaise karein</h2><h3 id="ready-made-login-dummy-data-ke-saath">Ready-made login (dummy data ke saath)</h3><div class="table-wrap"><table><thead><tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead><tbody><tr>
+<td><strong>Email</strong></td>
+<td><code>aliadmin@gmail.com</code></td>
+</tr>
+<tr>
+<td><strong>Password</strong></td>
+<td><code>AliAdmin@123</code></td>
+</tr>
+<tr>
+<td><strong>Role</strong></td>
+<td>Recruiter</td>
+</tr>
+</tbody></table></div><p>Is account mein pehle se ye data hai:</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Job (WorkOura Tech)</th>
+<th>Applications</th>
+</tr>
+</thead><tbody><tr>
+<td>React Developer (Lahore, Full-time)</td>
+<td>3: Ali Raza <em>(interview)</em>, Ayesha Noor <em>(reviewing)</em>, Zain Ahmed <em>(pending)</em></td>
+</tr>
+<tr>
+<td>UI/UX Designer (Remote)</td>
+<td>2: Hina Malik <em>(hired)</em>, Noor Fatima <em>(rejected)</em></td>
+</tr>
+<tr>
+<td>Database Administrator (Karachi, Contract)</td>
+<td>1: Ali Raza <em>(pending)</em></td>
+</tr>
+<tr>
+<td>Web Development Intern (Islamabad)</td>
+<td>2: Zain Ahmed <em>(reviewing)</em>, Noor Fatima <em>(pending)</em></td>
+</tr>
+</tbody></table></div><p>Login karke <strong>Dashboard</strong> pe jao. Wahan apni jobs, applications aur unka status nazar aayega, aur status badal bhi sakte ho. Is account ne 2 jobs save bhi ki hui hain.</p>
+<h3 id="apna-account-bana-ke-poora-flow-dekhna">Apna account bana ke poora flow dekhna</h3><ol>
+<li><a href="https://work-oura-jobs.netlify.app">https://work-oura-jobs.netlify.app</a> kholo.</li>
+<li><strong>Sign Up</strong> pe jao aur account banao. Role chuno: <em>Job Seeker</em> ya <em>Recruiter</em>.</li>
+<li><strong>Recruiter</strong> account se: Dashboard → job post karo.</li>
+<li>Doosre browser / incognito mein <strong>Job Seeker</strong> account banao → Jobs page → wo job kholo → <strong>Apply</strong>.</li>
+<li>Recruiter dashboard pe wapas jao → application nazar aayegi → status badlo.</li>
+<li>Seeker ke dashboard pe naya status dikhega.</li>
+</ol>
+<blockquote>
+<p><code>aliadmin@gmail.com</code> ke ilawa demo data wale accounts (<code>ahmed.khan@demo.pk</code>, <code>ali.raza@demo.pk</code> waghera) <strong>login nahi ho sakte</strong>. Unka password jaan boojh kar fake rakha gaya hai, wo sirf SQL labs ke results ke liye hain. Test ke liye apna account banao.</p>
+</blockquote>
+<hr>
+<h2 id="3-technology-kaunsi-cheez-kis-liye">3. Technology (kaunsi cheez kis liye)</h2><div class="table-wrap"><table><thead><tr>
+<th>Cheez</th>
+<th>Kaam</th>
+</tr>
+</thead><tbody><tr>
+<td><strong>Next.js 15</strong> (React)</td>
+<td>Website ke pages (frontend) <strong>aur</strong> server ke API routes (backend), dono ek hi project mein</td>
+</tr>
+<tr>
+<td><strong>Tailwind CSS</strong></td>
+<td>Styling / design</td>
+</tr>
+<tr>
+<td><strong>Supabase</strong></td>
+<td>Online PostgreSQL database</td>
+</tr>
+<tr>
+<td><strong>supabase-js</strong></td>
+<td>Library jis se server database se baat karta hai</td>
+</tr>
+<tr>
+<td><strong>Netlify</strong></td>
+<td>Website ko internet pe host karta hai</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>Code store hota hai, version history</td>
+</tr>
+</tbody></table></div><hr>
+<h2 id="4-system-kaise-kaam-karta-hai">4. System kaise kaam karta hai</h2><pre><code> User ka Browser            Netlify (Next.js server)            Supabase
+ ───────────────           ────────────────────────           ──────────
+  React pages   ── fetch ─▶  /api/... routes   ── SQL ──▶   PostgreSQL tables
+  (jobs, login,  ◀─ JSON ──  (login check,     ◀─ rows ──   (accounts, jobs,
+   dashboard)                 validation)                    applications...)
+</code></pre>
+<p><strong>Example: &quot;Apply&quot; button dabane pe kya hota hai?</strong></p>
+<ol>
+<li>Browser <code>POST /api/jobs/&lt;id&gt;/apply</code> bhejta hai (cover letter, skills waghera).</li>
+<li>Server cookie se check karta hai ke user logged in hai.</li>
+<li>Server check karta hai: job active hai? apni hi job to nahi? pehle apply to nahi kiya?</li>
+<li>Sab theek → <code>applications</code> table mein ek row <strong>INSERT</strong> hoti hai.</li>
+<li>Server &quot;success&quot; wapas bhejta hai → screen pe &quot;Application submitted&quot; aata hai.</li>
+</ol>
+<p><strong>Important rule:</strong> browser <strong>kabhi seedha database se baat nahi karta</strong>. Har cheez server (API route) ke through jati hai. Is liye database ki secret key sirf server ke paas hoti hai, user ke browser mein nahi.</p>
+<hr>
+<h2 id="5-folder-structure-sirf-kaam-ki-files">5. Folder structure (sirf kaam ki files)</h2><pre><code>work-oura/
+├── src/
+│   ├── app/                  ← har folder = ek page / URL
+│   │   ├── page.js           ← Home page  (/)
+│   │   ├── jobs/             ← Jobs list (/jobs) + job detail (/jobs/[id])
+│   │   ├── companies/        ← Companies page
+│   │   ├── dashboard/        ← User dashboard (seeker + recruiter)
+│   │   ├── sign-in/ sign-up/ ← Login / Signup pages
+│   │   ├── about/            ← About page
+│   │   └── api/              ← BACKEND: server routes (database yahan se)
+│   ├── components/           ← Navbar, Footer, JobCard, JobFilters, JobPostModal
+│   ├── context/AuthContext.js← Logged-in user ki info poori site mein share karta hai
+│   ├── lib/                  ← Helpers: supabase connection, auth, password, JWT
+│   └── middleware.js         ← Bina login /dashboard pe jao to /sign-in pe bhej deta hai
+├── sql/
+│   ├── schema.sql            ← Poora database structure (tables, triggers, security)
+│   ├── ALL_IN_ONE.sql        ← DBMS lab queries (lab00 – lab09)
+│   ├── labs/                 ← Wahi lab queries alag alag files mein
+│   └── VIVA_NOTES.md / .pdf  ← SQL viva notes
+└── .env.local                ← Secret keys (GitHub pe NAHI jati)
+</code></pre>
+<hr>
+<h2 id="6-database-tables">6. Database tables</h2><div class="table-wrap"><table><thead><tr>
+<th>Table</th>
+<th>Kya store karta hai</th>
+</tr>
+</thead><tbody><tr>
+<td><code>accounts</code></td>
+<td>Users: email, password ka hash, naam, role</td>
+</tr>
+<tr>
+<td><code>sessions</code></td>
+<td>Kaun kab login hua (logout pe band)</td>
+</tr>
+<tr>
+<td><code>profiles</code></td>
+<td>Skills, bio, resume (har account ka ek)</td>
+</tr>
+<tr>
+<td><code>user_settings</code></td>
+<td>Dashboard ke settings toggles</td>
+</tr>
+<tr>
+<td><code>companies</code></td>
+<td>Companies ki info</td>
+</tr>
+<tr>
+<td><code>jobs</code></td>
+<td>Job posts: title, salary, location, status</td>
+</tr>
+<tr>
+<td><code>applications</code></td>
+<td>Kis seeker ne kis job pe apply kiya + status</td>
+</tr>
+<tr>
+<td><code>saved_jobs</code></td>
+<td>Bookmark ki hui jobs</td>
+</tr>
+<tr>
+<td><code>password_reset_tokens</code>, <code>email_verification_tokens</code></td>
+<td>Future features ke liye bane hain</td>
+</tr>
+</tbody></table></div><p><strong>Relationships:</strong></p>
+<ul>
+<li>Ek recruiter → bohot si jobs (1 : N)</li>
+<li>Ek company → bohot si jobs (1 : N)</li>
+<li>Seekers ↔ Jobs = M : N, <code>applications</code> table ke through</li>
+<li>Account ↔ Profile = 1 : 1 (naya account banate hi <strong>trigger</strong> khud profile aur settings bana deta hai)</li>
+</ul>
+<hr>
+<h2 id="7-login-system-kaise-kaam-karta-hai">7. Login system kaise kaam karta hai</h2><p>Hum ne apna login system khud banaya hai (Supabase Auth use nahi kiya):</p>
+<ol>
+<li><strong>Signup:</strong> password ko <strong>scrypt</strong> se hash karke save karte hain. Asli password kahin save nahi hota.</li>
+<li><strong>Login:</strong> password match ho to server ek <strong>JWT token</strong> banata hai aur use <strong>httpOnly cookie</strong> mein rakh deta hai (7 din valid). JavaScript is cookie ko chura nahi sakti.</li>
+<li>Har request pe server cookie check karta hai, aur <code>sessions</code> table mein dekhta hai ke session abhi bhi valid hai.</li>
+<li><strong>Logout:</strong> session ko revoke kar dete hain aur cookie mita dete hain.</li>
+</ol>
+<hr>
+<h2 id="8-security-viva-mein-zaroor-poochte-hain">8. Security (viva mein zaroor poochte hain)</h2><div class="table-wrap"><table><thead><tr>
+<th>Khatra</th>
+<th>Hum ne kya kiya</th>
+</tr>
+</thead><tbody><tr>
+<td>Database leak ho jaye</td>
+<td>Passwords hashed hain, asli password nahi milega</td>
+</tr>
+<tr>
+<td>Koi doosre ka data padhe</td>
+<td>Private tables pe <strong>RLS</strong> + <code>REVOKE</code>. Public key se sirf active jobs aur companies padh sakte ho</td>
+</tr>
+<tr>
+<td>SQL Injection</td>
+<td>supabase-js values ko parameter bana ke bhejta hai, aur search text saaf kiya jata hai</td>
+</tr>
+<tr>
+<td>Seeker apna status &quot;hired&quot; kar de</td>
+<td>Server check karta hai, sirf us job ka recruiter status badal sakta hai (warna 403 error)</td>
+</tr>
+<tr>
+<td>Ek job pe do baar apply</td>
+<td>Database mein <strong>unique index</strong> (job + applicant)</td>
+</tr>
+<tr>
+<td>Secret keys GitHub pe chali jayen</td>
+<td><code>.env.local</code> <code>.gitignore</code> mein hai. Keys sirf Netlify settings mein hain</td>
+</tr>
+</tbody></table></div><hr>
+<h2 id="9-project-apne-computer-pe-kaise-chalayein">9. Project apne computer pe kaise chalayein</h2><pre><code class="language-bash">git clone https://github.com/ALIRAZA4278/work-oura
+cd work-oura
+npm install
+# .env.example ko copy karke .env.local banao aur keys daalo (group leader se lo)
+npm run dev
+# browser mein http://localhost:3000 kholo
+</code></pre>
+<p><code>.env.local</code> mein ye 5 cheezein chahiye:</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Variable</th>
+<th>Kya hai</th>
+</tr>
+</thead><tbody><tr>
+<td><code>NEXT_PUBLIC_SUPABASE_URL</code></td>
+<td>Supabase project ka URL</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td>
+<td>Public (publishable) key</td>
+</tr>
+<tr>
+<td><code>SUPABASE_SERVICE_ROLE_KEY</code></td>
+<td>Secret key: <strong>kisi ko share mat karo</strong></td>
+</tr>
+<tr>
+<td><code>AUTH_SECRET</code></td>
+<td>Login tokens sign karne ka random secret (32+ characters)</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_APP_URL</code></td>
+<td>Website ka address</td>
+</tr>
+</tbody></table></div><hr>
+<h2 id="10-deployment">10. Deployment</h2><ul>
+<li>Code <strong>GitHub</strong> pe hai → <strong>Netlify</strong> use build karta hai (<code>npm run build</code>) → website live.</li>
+<li>Netlify pe upar wale 5 environment variables set hain.</li>
+<li>Database ek dafa <code>sql/schema.sql</code> chala ke bana tha (Supabase SQL Editor mein).</li>
+</ul>
+<hr>
+<h2 id="11-abhi-kya-kaam-nahi-karta-honest-list">11. Abhi kya kaam nahi karta (honest list)</h2><ul>
+<li><strong>Apply karne pe recruiter ko email:</strong> code mojood hai, lekin Gmail ke credentials (<code>NM_EMAIL_USER</code>, <code>NM_EMAIL_PW</code>) set nahi hain. Is liye email nahi jati. Application phir bhi save ho jati hai.</li>
+<li><strong>Forgot password / email verify:</strong> tables bane hue hain, lekin pages abhi nahi bane.</li>
+</ul>
+<hr>
+<h2 id="12-viva-ke-common-sawal">12. Viva ke common sawal</h2><ul>
+<li><strong>Project kya karta hai?</strong> Job seekers aur recruiters ko jodne wala job board. Recruiter job post karta hai, seeker apply karta hai, recruiter status update karta hai.</li>
+<li><strong>Frontend aur backend kya hain?</strong> Dono Next.js mein. <code>src/app/*</code> ke pages frontend hain, <code>src/app/api/*</code> backend hai.</li>
+<li><strong>Database kaunsa hai aur kyun?</strong> PostgreSQL (Supabase). Relational data hai (users ↔ jobs ↔ applications), is liye tables aur foreign keys best hain.</li>
+<li><strong>Password kaise save hota hai?</strong> scrypt hash + random salt. Asli password save nahi hota.</li>
+<li><strong>Login kaise yaad rehta hai?</strong> JWT token httpOnly cookie mein, aur <code>sessions</code> table mein record.</li>
+<li><strong>Browser seedha database se kyun nahi baat karta?</strong> Taake secret key aur private data server pe hi rahe.</li>
+<li><strong>Trigger ka example?</strong> Naya account banne pe <code>profiles</code> aur <code>user_settings</code> ki row khud ban jati hai. <code>updated_at</code> bhi trigger se update hota hai.</li>
+<li><strong>M:N relationship kahan hai?</strong> Seekers ↔ Jobs, <code>applications</code> table ke through (do foreign keys).</li>
+<li><strong>Hosting kahan hai?</strong> Website Netlify pe, database Supabase pe, code GitHub pe.</li>
+</ul>
+</main>
+</div>
+<button class="theme-btn" type="button" onclick="toggleTheme()">Light / Dark</button>
+<script>
+function toggleTheme(){
+  var root=document.documentElement;
+  var dark=root.dataset.theme? root.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme=dark?'light':'dark';
+}
+var links=[].slice.call(document.querySelectorAll('nav a'));
+var obs=new IntersectionObserver(function(es){es.forEach(function(e){
+  if(e.isIntersecting){links.forEach(function(l){l.classList.toggle('active',l.getAttribute('href')==='#'+e.target.id);});}
+});},{rootMargin:'0px 0px -70% 0px'});
+document.querySelectorAll('main h2').forEach(function(h){obs.observe(h);});
+</script>
+</body>
+</html>
