@@ -81,7 +81,7 @@ Login karke **Dashboard** pe jao. Wahan apni jobs, applications aur unka status 
 
 **Example: "Apply" button dabane pe kya hota hai?**
 
-1. Browser `POST /api/jobs/<id>/apply` bhejta hai (cover letter, skills waghera).
+1. Browser `POST /api/applications` bhejta hai (job id, cover letter, skills waghera).
 2. Server cookie se check karta hai ke user logged in hai.
 3. Server check karta hai: job active hai? apni hi job to nahi? pehle apply to nahi kiya?
 4. Sab theek → `applications` table mein ek row **INSERT** hoti hai.

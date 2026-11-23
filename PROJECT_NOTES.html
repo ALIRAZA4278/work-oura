@@ -172,7 +172,7 @@ li{margin:4px 0}
 </code></pre>
 <p><strong>Example: &quot;Apply&quot; button dabane pe kya hota hai?</strong></p>
 <ol>
-<li>Browser <code>POST /api/jobs/&lt;id&gt;/apply</code> bhejta hai (cover letter, skills waghera).</li>
+<li>Browser <code>POST /api/applications</code> bhejta hai (job id, cover letter, skills waghera).</li>
 <li>Server cookie se check karta hai ke user logged in hai.</li>
 <li>Server check karta hai: job active hai? apni hi job to nahi? pehle apply to nahi kiya?</li>
 <li>Sab theek → <code>applications</code> table mein ek row <strong>INSERT</strong> hoti hai.</li>

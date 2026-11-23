@@ -6,7 +6,7 @@ const ALLOWED_ROLES = ['job_seeker', 'recruiter'];
 
 /**
  * Logged-in account ka profile / role / settings update karta hai.
- * `/api/users` (PUT) aur `/api/users/me` (PUT) dono yahi use karte hain.
+ * `PUT /api/users` ise use karta hai.
  *
  * @returns {{status: number, body: object}}
  */

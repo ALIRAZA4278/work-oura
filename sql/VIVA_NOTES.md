@@ -355,11 +355,11 @@ Browser (React pages)  →  Next.js API routes (/api/...)  →  Supabase (Postgr
 | Browse / search jobs | `GET /api/jobs` | `jobs` (JOIN `accounts` for recruiter name), `ILIKE` search, `LIMIT/OFFSET` paging |
 | Job detail | `GET /api/jobs/[id]` | `jobs` + function `increment_job_views` (RPC) |
 | Post a job | `POST /api/jobs` | `companies` (find or create by slug), `jobs` |
-| Apply to a job | `POST /api/jobs/[id]/apply` | `applications` (unique index on job + applicant stops double apply) |
+| Apply to a job | `POST /api/applications` | `applications` (unique index on job + applicant stops double apply) |
 | Save / unsave job | `/api/jobs/[id]/save` | `saved_jobs` |
 | Recruiter changes status | `PATCH /api/applications/[id]` | `applications` (CHECK: pending / reviewing / interview / rejected / hired) |
 | Dashboard stats | `/api/dashboard` | `jobs` |
-| My profile / settings | `/api/users/me` | `accounts`, `profiles`, `user_settings` |
+| My profile / settings | `/api/users` | `accounts`, `profiles`, `user_settings` |
 | Companies page | `/api/companies` | `companies` |
 
 **Login (custom auth, no Supabase Auth):**

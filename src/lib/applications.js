@@ -16,8 +16,7 @@ export const APPLICATION_SELECT = `
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Ek job pe application banata hai. `/api/applications` aur
- * `/api/jobs/[id]/apply` dono yahi function use karte hain.
+ * Ek job pe application banata hai. `POST /api/applications` ise use karta hai.
  *
  * @returns {{status: number, body: object}}
  */

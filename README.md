@@ -114,7 +114,6 @@ src/
 │   ├── accounts.js        # Profile + settings updates
 │   ├── applications.js    # Shared "apply to job" logic
 │   ├── mappers.js         # snake_case <-> camelCase mapping
-│   └── email.js           # Application notification email
 └── middleware.js          # Route protection
 ```
 
@@ -135,8 +134,8 @@ src/
 - `GET /api/dashboard` - Logged-in recruiter ki apni jobs
 
 ### Users
-- `GET /api/users` (aur `/api/users/me`) - Current user profile
-- `PUT /api/users` (aur `/api/users/me`) - Update name / role / profile / settings
+- `GET /api/users` - Current user profile
+- `PUT /api/users` - Update name / role / profile / settings
 
 ### Applications
 - `GET /api/applications` - Apni applications (job seeker) ya apni jobs ki applications (recruiter)
